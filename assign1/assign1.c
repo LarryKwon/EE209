@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 
 enum DFAState
 {
@@ -10,7 +11,7 @@ enum DFAState
     PreOut
 };
 
-typedef struct
+typedef struct _wordCount
 {
     int nw;
     int nc;
@@ -18,35 +19,86 @@ typedef struct
     enum DFAState state;
 } wordCount;
 
-void out(const wordCount *ptr)
+void constructor(int nw, int nc, int nl, enum DFAState state, wordCount *ptr)
 {
-
-    return 0;
+    ptr->nc = nc;
+    ptr->nw = nw;
+    ptr->nl = nl;
+    ptr->state = state;
 }
 
-void in(const wordCount *ptr)
+wordCount out(const wordCount *ptr, char c)
 {
-    return 0;
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    if (isspace(c) != 0)
+    {
+        ptr_temp->nc += 1;
+        ptr_temp->state = Out;
+    }
+    else
+    {
+        if (c == = '/')
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = precomment_out;
+        }
+        else
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = In;
+            ptr_temp->nw += 1;
+        }
+    }
+    return temp;
 }
 
-void precomment_in(const wordCount *ptr)
+wordCount in(const wordCount *ptr, char c)
 {
-    return 0;
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    return temp;
 }
 
-void precomment_out(const wordCount *ptr)
+wordCount precomment_in(const wordCount *ptr, char c)
 {
-    return 0;
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    return temp;
 }
 
-void comment(const wordCount *ptr)
+wordCount precomment_out(const wordCount *ptr, char c)
 {
-    return 0;
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    return temp;
 }
 
-void pre_out(const wordCount *ptr)
+wordCount comment(const wordCount *ptr, char c)
 {
-    return 0;
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    return temp;
+}
+
+wordCount pre_out(const wordCount *ptr, char c)
+{
+    wordCount temp;
+    wordCount *ptr_temp;
+    ptr_temp = &temp;
+    constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+
+    return temp;
 }
 
 int main()
@@ -56,34 +108,40 @@ int main()
     wc.nw = 0;
     wc.nl = 0;
     wc.state = Out;
-    int c;
-    wordCount *ptr = &wc;
-    while (c = getchar() != EOF)
+    char c;
+    const wordCount *ptr = &wc;
+
+    while ((c = getchar()) != EOF)
     {
         switch (wc.state)
         {
         case Out:
-            void out(wordCount * ptr);
+            wc = out(ptr, c);
+            ptr = &wc;
             break;
 
         case In:
-            void in(wordCount * ptr);
+            wc = in(ptr, c);
+            ptr = &wc;
             break;
 
         case PreComment_In:
-            void precomment_in(wordCount * ptr);
+            wc = precomment_in(ptr, c);
+            ptr = &wc;
             break;
 
         case PreComment_Out:
-            void precomment_out(wordCount * ptr);
+            wc = precomment_out(ptr, c);
+            ptr = &wc;
             break;
 
         case Comment:
-            void comment(wordCount * ptr);
+            wc = comment(ptr, c);
+            ptr = &wc;
             break;
 
         case PreOut:
-            void preout(wordCount * ptr);
+            wc = pre_out(ptr, c);
             break;
         }
 
