@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 enum DFAState
 {
@@ -175,7 +176,13 @@ wordCount comment(const wordCount *ptr, char c)
     }
     else if (c == '\0')
     {
-        perror;
+        printf("Error: line %d: unterminated comment\n", ptr_temp->nl);
+        exit(1);
+    }
+    else if (c == '\n')
+    {
+        ptr_temp->nl += 1;
+        ptr_temp->nc += 1;
     }
     else
     {
@@ -196,7 +203,8 @@ wordCount pre_out(const wordCount *ptr, char c)
     }
     else if (c == '\0')
     {
-        perror;
+        printf("Error: line %d: unterminated comment\n", ptr_temp->nl);
+        exit(1);
     }
     else if (c == '/')
     {
