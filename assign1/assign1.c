@@ -35,15 +35,19 @@ wordCount out(const wordCount *ptr, char c)
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
     if (isspace(c) != 0)
     {
+        if (c == '\n')
+        {
+            ptr_temp->nl += 1;
+        }
         ptr_temp->nc += 1;
         ptr_temp->state = Out;
     }
     else
     {
-        if (c == = '/')
+        if (c == '/')
         {
             ptr_temp->nc += 1;
-            ptr_temp->state = precomment_out;
+            ptr_temp->state = PreComment_Out;
         }
         else
         {
@@ -61,6 +65,28 @@ wordCount in(const wordCount *ptr, char c)
     wordCount *ptr_temp;
     ptr_temp = &temp;
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    if (isspace(c) != 0)
+    {
+        if (c == '\n')
+        {
+            ptr_temp->nl += 1;
+        }
+        ptr_temp->nc += 1;
+        ptr_temp->state = Out;
+    }
+    else
+    {
+        if (c == '/')
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = PreComment_In;
+        }
+        else
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = In;
+        }
+    }
     return temp;
 }
 
@@ -70,6 +96,33 @@ wordCount precomment_in(const wordCount *ptr, char c)
     wordCount *ptr_temp;
     ptr_temp = &temp;
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    if (isspace(c) != 0)
+    {
+        if (c == '\n')
+        {
+            ptr_temp->nl += 1;
+        }
+        ptr_temp->nc += 1;
+        ptr_temp->state = Out;
+    }
+    else
+    {
+        if (c == '*')
+        {
+            ptr_temp->nw += 1;
+            ptr_temp->state = Comment;
+        }
+        else if (c == '/')
+        {
+            ptr_temp->nc + 1;
+            ptr_temp->state = PreComment_In;
+        }
+        else
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = In;
+        }
+    }
     return temp;
 }
 
@@ -79,6 +132,34 @@ wordCount precomment_out(const wordCount *ptr, char c)
     wordCount *ptr_temp;
     ptr_temp = &temp;
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    if (isspace(c) != 0)
+    {
+        if (c == '\n')
+        {
+            ptr_temp->nl += 1;
+        }
+        ptr_temp->nc += 1;
+        ptr_temp->nw += 1;
+        ptr_temp->state = Out;
+    }
+    else
+    {
+        if (c == '/')
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->nw += 1;
+            ptr_temp->state = PreComment_In;
+        }
+        else if (c == '*')
+        {
+            ptr_temp->state = Comment;
+        }
+        else
+        {
+            ptr_temp->nc += 1;
+            ptr_temp->state = In;
+        }
+    }
     return temp;
 }
 
@@ -88,6 +169,18 @@ wordCount comment(const wordCount *ptr, char c)
     wordCount *ptr_temp;
     ptr_temp = &temp;
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
+    if (c == '*')
+    {
+        ptr_temp->state = PreOut;
+    }
+    else if (c == '\0')
+    {
+        perror;
+    }
+    else
+    {
+        ptr_temp->state = Comment;
+    }
     return temp;
 }
 
@@ -97,7 +190,22 @@ wordCount pre_out(const wordCount *ptr, char c)
     wordCount *ptr_temp;
     ptr_temp = &temp;
     constructor(ptr->nw, ptr->nc, ptr->nl, ptr->state, ptr_temp);
-
+    if (c == '*')
+    {
+        ptr_temp->state = PreOut;
+    }
+    else if (c == '\0')
+    {
+        perror;
+    }
+    else if (c == '/')
+    {
+        ptr_temp->state = Out;
+    }
+    else
+    {
+        ptr_temp->state = Comment;
+    }
     return temp;
 }
 
@@ -142,9 +250,9 @@ int main()
 
         case PreOut:
             wc = pre_out(ptr, c);
+            ptr = &wc;
             break;
         }
-
-        printf("%d %d %d", wc.nl, wc.nw, wc.nc);
     }
+    printf("%d %d %d", wc.nl, wc.nw, wc.nc);
 }
