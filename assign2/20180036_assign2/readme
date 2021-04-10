@@ -1,0 +1,9 @@
+권혁태 20180036
+
+I just do myself without anybody’s help.
+
+No, it’s impossible. As the StrCopy parameter is the pointer, pcDest, pcSrc.  Therefore we can’t measure the size of array that pointed by the pointer.  using StrGetLength() is not proper because it can’t check any rest size of array. Moreover, if I use sizeof(pcDest), it always return 4byte, pointer size.
+
+But, logically, the parameter only points the start of array or, just one memory address. by using just that information, we can’t know the size of memory of the total array.
+
+Part1 is implemented by pointer
