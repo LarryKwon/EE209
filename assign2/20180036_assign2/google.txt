@@ -8,7 +8,7 @@ students at Stanford University. Together, they own about 14 percent of
 its shares and control 56 percent of the stockholder voting power through
  supervoting stock. They incorporated Google as a privately held company on 
 September 4, 1998. 
-An initial public offering followed on August 19, 2004. 
+An initial hello world public offering followed on August 19, 2004. 
 Its mission statement from the outset was "to organize the world's 
 information and make it universally accessible and useful,"[8] 
 and its unofficial slogan was "Don't
