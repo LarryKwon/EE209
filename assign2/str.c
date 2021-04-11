@@ -32,14 +32,14 @@ char *StrCopy(char *pcDest, const char* pcSrc)
 
   const char* walk = pcSrc;
   char * dest = pcDest;
-  while(walk != NULL){
-    *dest = *walk;
+  while(*walk != '\0'){
+    *pcDest = *walk;
     walk  += 1;
-    dest +=1;
+    pcDest += 1;
   }
-  
-
-  return pcDest;
+  *pcDest = '\0';
+  printf("%s",dest);
+  return dest;
 }
 
 /*------------------------------------------------------------------------*/
