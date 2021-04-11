@@ -27,28 +27,80 @@ size_t StrGetLength(const char* pcSrc)
 char *StrCopy(char *pcDest, const char* pcSrc)
 {
   /* TODO: fill this function */
+  assert(pcDest != NULL);
+  assert(pcSrc != NULL);
+
+  const char* walk = pcSrc;
+  char * dest = pcDest;
+  while(walk != NULL){
+    *dest = *walk;
+    walk  += 1;
+    dest +=1;
+  }
   
-  return strcpy(pcDest, pcSrc);
+
+  return pcDest;
 }
 
 /*------------------------------------------------------------------------*/
 int StrCompare(const char* pcS1, const char* pcS2)
 {
   /* TODO: fill this function */
- 
-  return strcmp(pcS1, pcS2);
+  assert(pcS1 != NULL);
+  assert(pcS2 != NULL);
+
+  char * src1 = (char *)pcS1;
+  char * src2 = (char *)pcS2;
+  while(src1!=NULL || src2 != NULL ){
+    if(*src1 != *src2){
+      return (*src1 - *src2);
+    }
+    src1 ++;
+    src2 ++;
+  }
+  return 0;
 }
 /*------------------------------------------------------------------------*/
 char *StrSearch(const char* pcHaystack, const char *pcNeedle)
 {
   /* TODO: fill this function */
- 
-  return strstr(pcHaystack, pcNeedle);
-}
+  assert(pcHaystack != NULL);
+  assert(pcNeedle != NULL);
+
+  size_t needleLength = StrGetLength(pcNeedle);
+  char * needle = (char *)pcNeedle;
+  int i = 0;
+  char * startPoint = NULL;
+
+  while(*pcHaystack!='\0'){
+    if( (*pcHaystack + i) == *needle ){
+      needle ++;
+    }
+    else{
+      needle = (char *) pcNeedle;
+    }
+    i ++;
+    if(*needle == '\0'){
+      startPoint = (char *)pcHaystack;
+      break;
+    }
+  }
+  return startPoint;
+  }
 /*------------------------------------------------------------------------*/
 char *StrConcat(char *pcDest, const char* pcSrc)
 {
   /* TODO: fill this function */
-  
-  return strcat(pcDest, pcSrc);
+  assert(pcDest != NULL);
+  assert(pcSrc != NULL);
+
+  char * startPoint = pcDest;
+  char * endPoint = (char*) pcSrc;
+  while(*startPoint != '\0'){
+    startPoint ++;
+  }
+  while(pcSrc != NULL){
+    *startPoint = *pcSrc;
+  }
+  return pcDest;
 }
