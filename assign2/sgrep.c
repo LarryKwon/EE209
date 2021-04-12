@@ -69,6 +69,7 @@ DoFind(const char *pcSearch)
 {
   char buf[MAX_STR_LEN + 2]; 
   int len;
+
   /* 
    *  Fill out your variables here 
    */
@@ -79,6 +80,10 @@ DoFind(const char *pcSearch)
     if ((len = StrGetLength(buf)) > MAX_STR_LEN) {
       fprintf(stderr, "Error: input line is too long\n");
       return FALSE;
+    }
+    
+    if(StrSearch(buf,pcSearch) != NULL){
+      printf("%s",buf);
     }
     /* TODO: fill out this function */
       
