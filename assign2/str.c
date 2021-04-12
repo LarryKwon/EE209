@@ -72,18 +72,19 @@ char *StrSearch(const char* pcHaystack, const char *pcNeedle)
   int i = 0;
   char * startPoint = NULL;
 
-  while(*pcHaystack!='\0'){
-    if( (*pcHaystack + i) == *needle ){
+  while(*(pcHaystack+i)!='\0'){
+    // printf("%c", * (pcHaystack + i));
+    if(*needle == '\0'){
+      startPoint = (char *)pcHaystack + (i - needleLength);
+      break;
+    }
+    if( *(pcHaystack + i) == *needle ){
       needle ++;
     }
     else{
       needle = (char *) pcNeedle;
     }
     i ++;
-    if(*needle == '\0'){
-      startPoint = (char *)pcHaystack;
-      break;
-    }
   }
   return startPoint;
   }
