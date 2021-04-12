@@ -97,11 +97,16 @@ char *StrConcat(char *pcDest, const char* pcSrc)
 
   char * startPoint = pcDest;
   char * endPoint = (char*) pcSrc;
+
   while(*startPoint != '\0'){
     startPoint ++;
   }
-  while(pcSrc != NULL){
-    *startPoint = *pcSrc;
+
+  while( *endPoint != '\0'){
+    *startPoint = *endPoint;
+    startPoint ++;
+    endPoint ++;
   }
+  *startPoint = '\0';
   return pcDest;
 }
