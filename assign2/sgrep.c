@@ -249,7 +249,7 @@ int DoDiff(const char *file1, const char *file2)
         fprintf(stderr, "Error: input line %s is too long\n", file2);
         return FALSE;
       }
-      /* \n exist? 
+      /* \n exist? */
       if (buf_f1[f1_len - 1] != '\n')
       {
         buf_f1[f1_len] = '\n';
@@ -260,14 +260,13 @@ int DoDiff(const char *file1, const char *file2)
         buf_f2[f2_len] = '\n';
         buf_f2[f2_len + 1] = '\0';
       }
-      */
 
-      printf("%s\n",buf_f1);
-      printf("%s\n",buf_f2);
+      // printf("%s\n",buf_f1);
+      // printf("%s\n",buf_f2);
       //line compare//
       if (StrCompare(buf_f1, buf_f2) != 0)
       {
-        printf("%d\n",StrCompare(buf_f1,buf_f2));
+        // printf("%d\n",StrCompare(buf_f1,buf_f2));
         printf("%s@%d:%s", file1, count, buf_f1);
         printf("%s@%d:%s", file2, count, buf_f2);
       }

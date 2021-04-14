@@ -52,7 +52,7 @@ int StrCompare(const char *pcS1, const char *pcS2)
 
   char *src1 = (char *)pcS1;
   char *src2 = (char *)pcS2;
-  while (src1 != NULL || src2 != NULL)
+  while (*src1 != '\0' || *src2 != '\0')
   {
     if (*src1 != *src2)
     {
