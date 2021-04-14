@@ -196,6 +196,97 @@ int DoReplace(const char *pcString1, const char *pcString2)
 int DoDiff(const char *file1, const char *file2)
 {
   /* TODO: fill out this function */
+  /* length of file name check */
+  size_t f1_length = StrGetLength(file1);
+  size_t f2_length = StrGetLength(file2);
+  if (f1_length > MAX_STR_LEN || f2_length > MAX_STR_LEN)
+  {
+    fprintf(stderr, "Error: arugment is too long\n");
+    return FALSE;
+  }
+
+  FILE *fp1 = fopen(file1, "r");
+  FILE *fp2 = fopen(file2, "r");
+  if (fp1 == NULL)
+  {
+    fprintf(stderr, "Error: failed to open file %s\n", file1);
+    return FALSE;
+  }
+  else if (fp2 == NULL)
+  {
+    fprintf(stderr, "Error: failed to open file %s\n", file2);
+    return FALSE;
+  }
+  else
+  {
+    char buf_f1[MAX_STR_LEN + 2];
+    char buf_f2[MAX_STR_LEN + 2];
+    int count = 0;
+    char *res1;
+    char *res2;
+    while (TRUE)
+    {
+      res1 = fgets(buf_f1, sizeof(buf_f1), fp1);
+      res2 = fgets(buf_f2, sizeof(buf_f2), fp2);
+
+      //line exist?//
+      if (res1 == 0 || res2 == 0)
+      {
+        break;
+      }
+      count++;
+      int f1_len = StrGetLength(buf_f1);
+      int f2_len = StrGetLength(buf_f2);
+
+      //line size longer than 1023?//
+      if (f1_len > MAX_STR_LEN)
+      {
+        fprintf(stderr, "Error: input line %s is too long\n", file1);
+        return FALSE;
+      }
+      else if (f2_len > MAX_STR_LEN)
+      {
+        fprintf(stderr, "Error: input line %s is too long\n", file2);
+        return FALSE;
+      }
+      /* \n exist? 
+      if (buf_f1[f1_len - 1] != '\n')
+      {
+        buf_f1[f1_len] = '\n';
+        buf_f1[f1_len + 1] = '\0';
+      }
+      if (buf_f2[f2_len - 1] != '\n')
+      {
+        buf_f2[f2_len] = '\n';
+        buf_f2[f2_len + 1] = '\0';
+      }
+      */
+
+      printf("%s\n",buf_f1);
+      printf("%s\n",buf_f2);
+      //line compare//
+      if (StrCompare(buf_f1, buf_f2) != 0)
+      {
+        printf("%d\n",StrCompare(buf_f1,buf_f2));
+        printf("%s@%d:%s", file1, count, buf_f1);
+        printf("%s@%d:%s", file2, count, buf_f2);
+      }
+    }
+    //early end?//
+    if (res1 == NULL && res2 != NULL)
+    {
+      fprintf(stderr, "Error: %s ends early at line %d\n",
+              file1, count);
+      return FALSE;
+    }
+    else if (res2 == NULL && res1 != NULL)
+    {
+      fprintf(stderr, "Error: %s ends early at line %d\n",
+              file2, count);
+      return FALSE;
+    }
+  }
+
   return TRUE;
 }
 /*-------------------------------------------------------------------*/
