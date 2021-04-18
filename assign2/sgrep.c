@@ -73,6 +73,10 @@ int DoFind(const char *pcSearch)
    *  Fill out your variables here 
    */
 
+  if(StrGetLength(pcSearch)>MAX_STR_LEN){
+    fprintf(stderr,"Error: argument is too long\n");
+    return FALSE;
+  }
   /* Read the line by line from stdin, Note that this is an example */
   while (fgets(buf, sizeof(buf), stdin))
   {
@@ -126,6 +130,16 @@ int DoReplace(const char *pcString1, const char *pcString2)
   int len;
   int String1len = StrGetLength(pcString1);
   int String2len = StrGetLength(pcString2);
+
+  if(String1len > MAX_STR_LEN || String2len > MAX_STR_LEN){
+    fprintf(stderr,"Error: argument is too long\n");
+    return FALSE;
+  }
+
+  if(*pcString1 == '\0'){
+    fprintf(stderr,"Error: Can't replace an empty substring\n");
+    return FALSE;
+  }
 
   while (fgets(buf, sizeof(buf), stdin))
   {
@@ -210,11 +224,15 @@ int DoDiff(const char *file1, const char *file2)
   if (fp1 == NULL)
   {
     fprintf(stderr, "Error: failed to open file %s\n", file1);
+    fclose(fp1);
+    fclose(fp2);
     return FALSE;
   }
   else if (fp2 == NULL)
   {
     fprintf(stderr, "Error: failed to open file %s\n", file2);
+    fclose(fp1);
+    fclose(fp2);
     return FALSE;
   }
   else
@@ -242,11 +260,15 @@ int DoDiff(const char *file1, const char *file2)
       if (f1_len > MAX_STR_LEN)
       {
         fprintf(stderr, "Error: input line %s is too long\n", file1);
+        fclose(fp1);
+        fclose(fp2);
         return FALSE;
       }
       else if (f2_len > MAX_STR_LEN)
       {
         fprintf(stderr, "Error: input line %s is too long\n", file2);
+        fclose(fp1);
+        fclose(fp2);
         return FALSE;
       }
       /* \n exist? */
@@ -276,16 +298,21 @@ int DoDiff(const char *file1, const char *file2)
     {
       fprintf(stderr, "Error: %s ends early at line %d\n",
               file1, count);
+      fclose(fp1);
+      fclose(fp2);
       return FALSE;
     }
     else if (res2 == NULL && res1 != NULL)
     {
       fprintf(stderr, "Error: %s ends early at line %d\n",
               file2, count);
+      fclose(fp1);
+      fclose(fp2);
       return FALSE;
     }
   }
-
+  fclose(fp1);
+  fclose(fp2);
   return TRUE;
 }
 /*-------------------------------------------------------------------*/

@@ -1,0 +1,19 @@
+Oh Jihwan / 20190395 /
+
+I used only the pointer notation for Part1
+
+TA Ahn Namjo
+
+It is impossible for StrCopy to call assert to verify that the destination memory
+area specified by the caller is large enough. Because, to know the destination
+memory area is large enough, we need to know the size of array or dynamic memory
+that we get with the pcDest. To know that we can use the fuction, sizeof().
+But with sizeof function we can't know the size of array or dynamic memory.
+Because we get these things with pcDest, pointer, so if we use sizeof function
+to know the size of array and dynamic memory, like this sentence
+sizeof(pcDest);
+it return the size of pointer type variable, not the size of array.
+So by this reason we can't know the size of array or dynamic memory in function.
+We can't know the size of array or dynamic memory in function,
+also, it means we can't make any condition to check the size of array or dynamic memory
+As a result,we can't verify that the destination memory area is enough large with assert.
