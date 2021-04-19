@@ -55,14 +55,16 @@ void DestroyCustomerDB(DB_T d)
   assert(d);
   struct UserInfo *node;
   struct UserInfo *next;
-  int i = 0;
-  for (node = d->pArray[i]; node != NULL; i++)
+  int i;
+  for (int i = 0; i < d->curArrSize; i++)
   {
-    free(node->id);
-    free(node->name);
+
+    free(d->pArray[i].name);
+    d->pArray[i].name = NULL;
+    free(d->pArray[i].id);
+    d->pArray[i].id = NULL;
   }
   free(d->pArray);
-  return NULL;
 }
 /*--------------------------------------------------------------------*/
 
@@ -84,9 +86,12 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   assert(name);
   assert(purchase > 0);
 
-  int i = 0;
-  for (i = 0; d->pArray[i] != NULL; i++)
+  for (size_t i = 0; i < (d->curArrSize); i++)
   {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
     if (strcmp(d->pArray[i].id, id) == 0)
     {
       return (-1);
@@ -96,7 +101,10 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
       return (-1);
     }
   }
-
+  int i;
+  for (i = 0; d->pArray[i].name != NULL; i++)
+  {
+  }
   if ((d->pArray[i].id = strdup(id)) == NULL)
   {
     return (-1);
