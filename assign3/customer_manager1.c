@@ -51,20 +51,28 @@ If the given pointer to the DB_T object is NULL, it should do nothing.
 
 void DestroyCustomerDB(DB_T d)
 {
-  /* fill out this function */
-  assert(d);
-  struct UserInfo *node;
-  struct UserInfo *next;
-  int i;
-  for (int i = 0; i < d->curArrSize; i++)
-  {
+  //validate the paramter
 
-    free(d->pArray[i].name);
-    d->pArray[i].name = NULL;
-    free(d->pArray[i].id);
-    d->pArray[i].id = NULL;
+  if (d == NULL)
+  {
   }
-  free(d->pArray);
+  else
+  {
+    // assert(d);
+
+    struct UserInfo *node;
+    struct UserInfo *next;
+    int i;
+    for (int i = 0; i < d->curArrSize; i++)
+    {
+
+      free(d->pArray[i].name);
+      d->pArray[i].name = NULL;
+      free(d->pArray[i].id);
+      d->pArray[i].id = NULL;
+    }
+    free(d->pArray);
+  }
 }
 /*--------------------------------------------------------------------*/
 
@@ -82,9 +90,15 @@ A good strategy is to check if such an item already exists, and allocate the new
 */
 int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchase)
 {
-  assert(id);
-  assert(name);
-  assert(purchase > 0);
+  // validate the paramter
+  if (d == NULL || id == NULL || name == NULL || purchase <= 0)
+  {
+    return (-1);
+  }
+  // assert(d);
+  // assert(id);
+  // assert(name);
+  // assert(purchase > 0);
 
   for (size_t i = 0; i < (d->curArrSize); i++)
   {
@@ -117,38 +131,140 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   return 0;
 }
 /*--------------------------------------------------------------------*/
+/*
+On success, it should return 0. Otherwise, it should return -1.
+If d or id is NULL, it is a failure. If no such item exists, it is a failure.
+Make sure that you free all the memory allocated for the item being unregistered.
+*/
 int UnregisterCustomerByID(DB_T d, const char *id)
 {
-  /* fill out this function */
-  assert(0);
+  //validate paramter
+  if (d == NULL || id == NULL)
+  {
+    return (-1);
+  }
+  // assert(d);
+  // assert(id);
+
+  //search item in db//
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
+    if (strcmp(d->pArray[i].id, id) == 0)
+    {
+      free(d->pArray[i].name);
+      d->pArray[i].name = NULL;
+
+      free(d->pArray[i].id);
+      d->pArray[i].id = NULL;
+
+      return 0;
+    }
+  }
   return (-1);
+  //unregister//
 }
 
 /*--------------------------------------------------------------------*/
 int UnregisterCustomerByName(DB_T d, const char *name)
 {
-  /* fill out this function */
-  assert(0);
+  //validate paramter
+  if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+  // assert(d);
+  // assert(name);
+
+  //search item in db//
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
+    if (strcmp(d->pArray[i].name, name) == 0)
+    {
+      free(d->pArray[i].name);
+      d->pArray[i].name = NULL;
+
+      free(d->pArray[i].id);
+      d->pArray[i].id = NULL;
+
+      return 0;
+    }
+  }
   return (-1);
 }
 /*--------------------------------------------------------------------*/
 int GetPurchaseByID(DB_T d, const char *id)
 {
-  /* fill out this function */
-  assert(0);
+  //validate paramter
+  if (d == NULL || id == NULL)
+  {
+    return (-1);
+  }
+
+  //get method
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
+    if (strcmp(d->pArray[i].id, id) == 0)
+    {
+      return d->pArray[i].purchase;
+    }
+  }
   return (-1);
 }
 /*--------------------------------------------------------------------*/
 int GetPurchaseByName(DB_T d, const char *name)
 {
-  /* fill out this function */
-  assert(0);
+
+  //validate paramter
+  if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+
+  //get method
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
+    if (strcmp(d->pArray[i].name, name) == 0)
+    {
+      return d->pArray[i].purchase;
+    }
+  }
   return (-1);
 }
 /*--------------------------------------------------------------------*/
 int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  //validate paramter
+  if (d == NULL || fp == NULL)
+  {
+    return (-1);
+  }
+  int sum = 0;
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    if (d->pArray[i].name == NULL)
+    {
+      continue;
+    }
+    else
+    {
+      sum += (*fp)(d->pArray[i].id, d->pArray[i].name, d->pArray[i].purchase);
+    }
+  }
+  return sum;
 }
