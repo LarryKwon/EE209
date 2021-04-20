@@ -5,6 +5,7 @@
 #include "customer_manager.h"
 
 #define UNIT_ARRAY_SIZE 1024
+#define RESIZING_FACTOR 2
 
 struct UserInfo
 {
@@ -22,6 +23,37 @@ struct DB
                            // # or not
 };
 
+static int assertSize(DB_T d)
+{
+  assert(d);
+
+  if (d->curArrSize == d->numItems)
+  {
+    return (-1);
+  }
+  else
+  {
+    return 0;
+  }
+}
+static void ResizingDb(DB_T d)
+{
+  assert(d);
+
+  struct DB_T temp;
+  int newArrSize = d->curArrSize * RESIZING_FACTOR;
+  temp = (DB_T)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
+  if (temp == NULL)
+  {
+    return (-1);
+  }
+  else
+  {
+    d->pArray = temp;
+    d->curArrSize = newArrSize;
+    return 0;
+  }
+}
 /*--------------------------------------------------------------------*/
 DB_T CreateCustomerDB(void)
 {
@@ -95,11 +127,16 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   {
     return (-1);
   }
-  // assert(d);
-  // assert(id);
-  // assert(name);
-  // assert(purchase > 0);
-
+  //validate the size//
+  int res = assertSize(d);
+  if (res == -1)
+  {
+    if (ResizingDb(d) == (-1))
+    {
+      return (-1);
+    }
+  }
+  //check whether there is same id or name//
   for (size_t i = 0; i < (d->curArrSize); i++)
   {
     if (d->pArray[i].name == NULL)
