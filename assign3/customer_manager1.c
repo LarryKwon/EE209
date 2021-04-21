@@ -151,6 +151,7 @@ void DestroyCustomerDB(DB_T d)
       d->pArray[i].id = NULL;
     }
     free(d->pArray);
+	free(d);
   }
 }
 /*--------------------------------------------------------------------*/
