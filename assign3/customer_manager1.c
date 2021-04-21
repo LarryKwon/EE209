@@ -5,7 +5,15 @@
 #include "customer_manager.h"
 
 #define UNIT_ARRAY_SIZE 20
-#define RESIZING_FACTOR 2
+#define EXPANDING_FACTOR 2
+#define SHRINKING_FACTOR 2
+
+enum ArrState
+{
+  NORMAL,
+  FULFILLED,
+  HALF
+};
 
 struct UserInfo
 {
@@ -19,40 +27,77 @@ struct DB
   struct UserInfo *pArray; // pointer to the array
   int curArrSize;          // current array size (max # of elements)
   int numItems;            // # of stored items, needed to determine
-                           // # whether the array should be expanded
-                           // # or not
+  enum ArrState arrState;  // # whether the array should be expanded # or not
 };
 
-static int assertSize(DB_T d)
+static void assertSize(DB_T d)
 {
   assert(d);
-
   if (d->curArrSize == d->numItems)
   {
-    return (-1);
+    d->arrState = FULFILLED;
+  }
+  else if (d->numItems < (d->curArrSize / 2))
+  {
+    d->arrState = HALF;
   }
   else
   {
-    return 0;
+    d->arrState = NORMAL;
   }
 }
 static int ResizeDb(DB_T d)
 {
   assert(d);
 
+  //validate arrSize
+  assertSize(d);
+
   struct UserInfo *temp;
-  int newArrSize = d->curArrSize * RESIZING_FACTOR;
-  temp = (struct UserInfo *)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
-  if (temp == NULL)
+  int newArrSize;
+
+  switch (d->arrState)
   {
-    return (-1);
-  }
-  else
-  {
-    d->pArray = temp;
-    d->curArrSize = newArrSize;
-    printf("%s \t now : %d\n", "resizing success", d->curArrSize);
+  case FULFILLED:
+    newArrSize = d->curArrSize * EXPANDING_FACTOR;
+    temp = (struct UserInfo *)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
+    if (temp == NULL)
+    {
+      printf("%s \t now : %d\n", "Resizing(expand) failed", d->curArrSize);
+      d->arrState = FULFILLED;
+      return (-1);
+    }
+    else
+    {
+      d->pArray = temp;
+      d->curArrSize = newArrSize;
+      printf("%s \t now : %d\n", "Resizing(expand) success", d->curArrSize);
+      d->arrState = NORMAL;
+      return 0;
+    }
+    break;
+  case HALF:
+    newArrSize = d->curArrSize / SHRINKING_FACTOR;
+    temp = (struct UserInfo *)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
+    if (temp = NULL)
+    {
+      printf("%s \t now : %d\n", "resizing(shrink) failed", d->curArrSize);
+      d->arrState = HALF;
+      return (-1);
+    }
+    else
+    {
+      d->pArray = temp;
+      d->curArrSize = newArrSize;
+      d->arrState = NORMAL;
+      printf("%s \t now : %d\n", "Resizing(shrink) success", d->curArrSize);
+      return 0;
+    }
+    break;
+
+  case NORMAL:
     return 0;
+    break;
   }
 }
 /*--------------------------------------------------------------------*/
@@ -68,6 +113,7 @@ DB_T CreateCustomerDB(void)
   }
   d->curArrSize = UNIT_ARRAY_SIZE; // start with 1024 elements
   d->pArray = (struct UserInfo *)calloc(d->curArrSize, sizeof(struct UserInfo));
+  d->arrState = NORMAL;
   if (d->pArray == NULL)
   {
     fprintf(stderr, "Can't allocate a memory for array of size %d\n", d->curArrSize);
@@ -91,7 +137,6 @@ void DestroyCustomerDB(DB_T d)
   }
   else
   {
-
     struct UserInfo *node;
     struct UserInfo *next;
     int i;
@@ -127,14 +172,10 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   {
     return (-1);
   }
-  //validate the size//
-  int res = assertSize(d);
-  if (res == -1)
+  //Resizing Db//
+  if (ResizeDb(d) == (-1))
   {
-    if (ResizeDb(d) == (-1))
-    {
-      return (-1);
-    }
+    return (-1);
   }
   //copy d->curArrSize d->numItems
   int curArrSize = d->curArrSize;
@@ -178,6 +219,11 @@ int UnregisterCustomerByID(DB_T d, const char *id)
   {
     return (-1);
   }
+  //resize arrSize
+  if (ResizeDb(d) == (-1))
+  {
+    return (-1);
+  }
 
   //copy d->curArrSize d->numItems
   int curArrSize = d->curArrSize;
@@ -212,6 +258,12 @@ int UnregisterCustomerByName(DB_T d, const char *name)
 {
   //validate paramter
   if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+
+  //resize arrSize
+  if (ResizeDb(d) == (-1))
   {
     return (-1);
   }

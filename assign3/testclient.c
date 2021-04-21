@@ -185,6 +185,19 @@ int CorrectnessTest1()
 		name = NULL;
 	}
 
+	for (int i = 199; i > 0; i--)
+	{
+		char *id = calloc(6, sizeof(char));
+		char *name = calloc(8, sizeof(char));
+		sprintf(id, "id%d", i);
+		sprintf(name, "name%d", i);
+		result += TestRegisterCustomer(d, id, name, 10, -1);
+		free(id);
+		free(name);
+		id = NULL;
+		name = NULL;
+	}
+
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 1 %s\n\n",
