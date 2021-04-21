@@ -36,13 +36,13 @@ static int assertSize(DB_T d)
     return 0;
   }
 }
-static void ResizingDb(DB_T d)
+static int ResizeDb(DB_T d)
 {
   assert(d);
 
-  struct DB_T temp;
+  struct UserInfo *temp;
   int newArrSize = d->curArrSize * RESIZING_FACTOR;
-  temp = (DB_T)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
+  temp = (struct UserInfo *)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
   if (temp == NULL)
   {
     return (-1);
@@ -90,7 +90,6 @@ void DestroyCustomerDB(DB_T d)
   }
   else
   {
-    // assert(d);
 
     struct UserInfo *node;
     struct UserInfo *next;
@@ -131,18 +130,18 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   int res = assertSize(d);
   if (res == -1)
   {
-    if (ResizingDb(d) == (-1))
+    if (ResizeDb(d) == (-1))
     {
       return (-1);
     }
   }
+  //copy d->curArrSize d->numItems
+  int curArrSize = d->curArrSize;
+  int numItems = d->numItems;
+
   //check whether there is same id or name//
-  for (size_t i = 0; i < (d->curArrSize); i++)
+  for (int i = 0; i < numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
     if (strcmp(d->pArray[i].id, id) == 0)
     {
       return (-1);
@@ -152,19 +151,17 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
       return (-1);
     }
   }
-  int i;
-  for (i = 0; d->pArray[i].name != NULL; i++)
-  {
-  }
-  if ((d->pArray[i].id = strdup(id)) == NULL)
+  // add the userInfo to Dynamic Arr //
+  if ((d->pArray[numItems].id = strdup(id)) == NULL)
   {
     return (-1);
   };
-  if ((d->pArray[i].name = strdup(name)) == NULL)
+  if ((d->pArray[numItems].name = strdup(name)) == NULL)
   {
     return (-1);
   };
-  d->pArray[i].purchase = purchase;
+  d->pArray[numItems].purchase = purchase;
+  d->numItems += 1;
   return 0;
 }
 /*--------------------------------------------------------------------*/
@@ -180,16 +177,14 @@ int UnregisterCustomerByID(DB_T d, const char *id)
   {
     return (-1);
   }
-  // assert(d);
-  // assert(id);
 
-  //search item in db//
-  for (int i = 0; i < d->curArrSize; i++)
+  //copy d->curArrSize d->numItems
+  int curArrSize = d->curArrSize;
+  int numItems = d->numItems;
+
+  //check whethere ther is same item in hte array
+  for (int i = 0; i < numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
     if (strcmp(d->pArray[i].id, id) == 0)
     {
       free(d->pArray[i].name);
@@ -197,12 +192,18 @@ int UnregisterCustomerByID(DB_T d, const char *id)
 
       free(d->pArray[i].id);
       d->pArray[i].id = NULL;
+      d->numItems -= 1;
 
+      //Pull positions of items after the selectted itme
+      int Index = i;
+      for (int i = Index; i < (d->numItems); i++)
+      {
+        d->pArray[i] = d->pArray[i + 1];
+      }
       return 0;
     }
   }
   return (-1);
-  //unregister//
 }
 
 /*--------------------------------------------------------------------*/
@@ -213,16 +214,14 @@ int UnregisterCustomerByName(DB_T d, const char *name)
   {
     return (-1);
   }
-  // assert(d);
-  // assert(name);
 
-  //search item in db//
-  for (int i = 0; i < d->curArrSize; i++)
+  //copy d->curArrSize d->numItems
+  int curArrSize = d->curArrSize;
+  int numItems = d->numItems;
+
+  //check whethere ther is same item in hte array
+  for (int i = 0; i < numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
     if (strcmp(d->pArray[i].name, name) == 0)
     {
       free(d->pArray[i].name);
@@ -230,7 +229,14 @@ int UnregisterCustomerByName(DB_T d, const char *name)
 
       free(d->pArray[i].id);
       d->pArray[i].id = NULL;
+      d->numItems -= 1;
 
+      //Pull positions of items after the selectted itme
+      int Index = i;
+      for (int i = Index; i < (d->numItems); i++)
+      {
+        d->pArray[i] = d->pArray[i + 1];
+      }
       return 0;
     }
   }
@@ -246,12 +252,8 @@ int GetPurchaseByID(DB_T d, const char *id)
   }
 
   //get method
-  for (int i = 0; i < d->curArrSize; i++)
+  for (int i = 0; i < d->numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
     if (strcmp(d->pArray[i].id, id) == 0)
     {
       return d->pArray[i].purchase;
@@ -270,12 +272,8 @@ int GetPurchaseByName(DB_T d, const char *name)
   }
 
   //get method
-  for (int i = 0; i < d->curArrSize; i++)
+  for (int i = 0; i < d->numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
     if (strcmp(d->pArray[i].name, name) == 0)
     {
       return d->pArray[i].purchase;
@@ -292,16 +290,9 @@ int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
     return (-1);
   }
   int sum = 0;
-  for (int i = 0; i < d->curArrSize; i++)
+  for (int i = 0; i < d->numItems; i++)
   {
-    if (d->pArray[i].name == NULL)
-    {
-      continue;
-    }
-    else
-    {
-      sum += (*fp)(d->pArray[i].id, d->pArray[i].name, d->pArray[i].purchase);
-    }
+    sum += (*fp)(d->pArray[i].id, d->pArray[i].name, d->pArray[i].purchase);
   }
   return sum;
 }
