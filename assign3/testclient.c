@@ -12,9 +12,8 @@
 #include "customer_manager.h"
 
 /*--------------------------------------------------------------------*/
-int
-TestRegisterCustomer(DB_T d, const char* id, const char* name,
-					 int purchase, int expected_result)
+int TestRegisterCustomer(DB_T d, const char *id, const char *name,
+						 int purchase, int expected_result)
 {
 	int test_result;
 
@@ -26,14 +25,13 @@ TestRegisterCustomer(DB_T d, const char* id, const char* name,
 		printf("[PASSED] ");
 	else
 		printf("[FAILED] ");
-	printf("test result: %d / expected result: %d\n", 
+	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-int
-TestUnregisterCustomerByID(DB_T d, const char* id, int expected_result)
+int TestUnregisterCustomerByID(DB_T d, const char *id, int expected_result)
 {
 	int test_result;
 
@@ -44,15 +42,14 @@ TestUnregisterCustomerByID(DB_T d, const char* id, int expected_result)
 		printf("[PASSED] ");
 	else
 		printf("[FAILED] ");
-	printf("test result: %d / expected result: %d\n", 
+	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-int
-TestUnregisterCustomerByName(DB_T d, const char* name,
-							 int expected_result)
+int TestUnregisterCustomerByName(DB_T d, const char *name,
+								 int expected_result)
 {
 	int test_result;
 
@@ -63,14 +60,13 @@ TestUnregisterCustomerByName(DB_T d, const char* name,
 		printf("[PASSED] ");
 	else
 		printf("[FAILED] ");
-	printf("test result: %d / expected result: %d\n", 
+	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-int
-TestGetPurchaseByID(DB_T d, const char* id, int expected_result)
+int TestGetPurchaseByID(DB_T d, const char *id, int expected_result)
 {
 	int test_result;
 
@@ -81,14 +77,13 @@ TestGetPurchaseByID(DB_T d, const char* id, int expected_result)
 		printf("[PASSED] ");
 	else
 		printf("[FAILED] ");
-	printf("test result: %d / expected result: %d\n", 
+	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-int
-TestGetPurchaseByName(DB_T d, const char* name, int expected_result)
+int TestGetPurchaseByName(DB_T d, const char *name, int expected_result)
 {
 	int test_result;
 
@@ -102,11 +97,10 @@ TestGetPurchaseByName(DB_T d, const char* name, int expected_result)
 	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-int
-NameStartsWithA(const char* id, const char* name, int purchase)
+int NameStartsWithA(const char *id, const char *name, int purchase)
 {
 	if (*name == 'A')
 		return purchase;
@@ -114,8 +108,7 @@ NameStartsWithA(const char* id, const char* name, int purchase)
 		return 0;
 }
 /*--------------------------------------------------------------------*/
-int
-IDStartsWithA(const char* id, const char* name, int purchase)
+int IDStartsWithA(const char *id, const char *name, int purchase)
 {
 	if (*id == 'A')
 		return purchase;
@@ -123,8 +116,7 @@ IDStartsWithA(const char* id, const char* name, int purchase)
 		return 0;
 }
 /*--------------------------------------------------------------------*/
-int
-PurchaseLargerThan100(const char* id, const char* name, int purchase)
+int PurchaseLargerThan100(const char *id, const char *name, int purchase)
 {
 	if (purchase > 100)
 		return purchase;
@@ -132,9 +124,8 @@ PurchaseLargerThan100(const char* id, const char* name, int purchase)
 		return 0;
 }
 /*--------------------------------------------------------------------*/
-int
-TestGetSumCustomerPurchase(DB_T d, FUNCPTR_T fp, const char* fname,
-						   int expected_result)
+int TestGetSumCustomerPurchase(DB_T d, FUNCPTR_T fp, const char *fname,
+							   int expected_result)
 {
 	int test_result;
 
@@ -148,60 +139,75 @@ TestGetSumCustomerPurchase(DB_T d, FUNCPTR_T fp, const char* fname,
 	printf("test result: %d / expected result: %d\n",
 		   test_result, expected_result);
 
-	return (expected_result == test_result)? 0 : -1;
+	return (expected_result == test_result) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
 /* Correctness Test 1: RegisterCustomer only */
-int
-CorrectnessTest1() {
-	
+int CorrectnessTest1()
+{
+
 	DB_T d;
 	int result;
 
 	result = 0;
-	printf("------------------------------------------------------\n" \
-		   "  Correctness Test 1: RegisterCustomer only\n" \
+	printf("------------------------------------------------------\n"
+		   "  Correctness Test 1: RegisterCustomer only\n"
 		   "------------------------------------------------------\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return -1;
 	}
 
-	result += TestRegisterCustomer(d, "id1", "name1", 10, 0);
-	result += TestRegisterCustomer(d, "id2", "name2", 10, 0);
-	result += TestRegisterCustomer(d, "id3", "name3", 10, 0);
-	result += TestRegisterCustomer(d, "id3", "name3", 10, -1);
-	result += TestRegisterCustomer(d, "id2", "name2", 10, -1);
-	result += TestRegisterCustomer(d, "id1", "name1", 10, -1);
-	result += TestRegisterCustomer(d, "id4", "name1", 10, -1);
-	result += TestRegisterCustomer(d, "id2", "name5", 10, -1);
-	result += TestRegisterCustomer(d, "name3", "id3", 10, 0);
-	result += TestRegisterCustomer(d, "name3", "id3", 10, -1);
+	// result += TestRegisterCustomer(d, "id1", "name1", 10, 0);
+	// result += TestRegisterCustomer(d, "id2", "name2", 10, 0);
+	// result += TestRegisterCustomer(d, "id3", "name3", 10, 0);
+	// result += TestRegisterCustomer(d, "id3", "name3", 10, -1);
+	// result += TestRegisterCustomer(d, "id2", "name2", 10, -1);
+	// result += TestRegisterCustomer(d, "id1", "name1", 10, -1);
+	// result += TestRegisterCustomer(d, "id4", "name1", 10, -1);
+	// result += TestRegisterCustomer(d, "id2", "name5", 10, -1);
+	// result += TestRegisterCustomer(d, "name3", "id3", 10, 0);
+	// result += TestRegisterCustomer(d, "name3", "id3", 10, -1);
+
+	for (int i = 0; i < 200; i++)
+	{
+		char *id = calloc(6, sizeof(char));
+		char *name = calloc(8, sizeof(char));
+		sprintf(id, "id%d", i);
+		sprintf(name, "name%d", i);
+		result += TestRegisterCustomer(d, id, name, 10, 0);
+		free(id);
+		free(name);
+		id = NULL;
+		name = NULL;
+	}
 
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 1 %s\n\n",
-		   (result >= 0)? "PASSED" : "FAILED!");
+		   (result >= 0) ? "PASSED" : "FAILED!");
 
-	return (result >= 0)? 0 : -1;
+	return (result >= 0) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
 /* Correctness Test 2: RegisterCustomer and UnregisterCustomer */
-int
-CorrectnessTest2() {
-	
+int CorrectnessTest2()
+{
+
 	DB_T d;
 	int result;
 
 	result = 0;
-	printf("------------------------------------------------------\n" \
-		   "  Correctness Test 2: Register/UnregisterCustomer\n" \
+	printf("------------------------------------------------------\n"
+		   "  Correctness Test 2: Register/UnregisterCustomer\n"
 		   "------------------------------------------------------\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return -1;
 	}
@@ -220,26 +226,27 @@ CorrectnessTest2() {
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 2 %s\n\n",
-		   (result >= 0)? "PASSED" : "FAILED!");
+		   (result >= 0) ? "PASSED" : "FAILED!");
 
-	return (result >= 0)? 0 : -1;
+	return (result >= 0) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
 /* Correctness Test 3: RegisterCustomer and GetPurchaseByID/Name */
-int
-CorrectnessTest3() {
-	
+int CorrectnessTest3()
+{
+
 	DB_T d;
 	int result;
 
 	result = 0;
-	printf("------------------------------------------------------\n" \
-		   "  Correctness Test 3:\n" \
-		   "  RegisterCustomer and GetPurchaseByID/Name\n" \
+	printf("------------------------------------------------------\n"
+		   "  Correctness Test 3:\n"
+		   "  RegisterCustomer and GetPurchaseByID/Name\n"
 		   "------------------------------------------------------\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return -1;
 	}
@@ -255,27 +262,28 @@ CorrectnessTest3() {
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 3 %s\n\n",
-		   (result >= 0)? "PASSED" : "FAILED!");
+		   (result >= 0) ? "PASSED" : "FAILED!");
 
-	return (result >= 0)? 0 : -1;
+	return (result >= 0) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
 /* Correctness Test 4: Register/UnregisterCustomer and
    GetPurchaseByID/Name */
-int
-CorrectnessTest4() {
-	
+int CorrectnessTest4()
+{
+
 	DB_T d;
 	int result;
 
 	result = 0;
-	printf("------------------------------------------------------\n" \
-		   "  Correctness Test 4:\n" \
-		   "  Register/UnregisterCustomer and GetPurchaseByID/Name\n" \
+	printf("------------------------------------------------------\n"
+		   "  Correctness Test 4:\n"
+		   "  Register/UnregisterCustomer and GetPurchaseByID/Name\n"
 		   "------------------------------------------------------\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return -1;
 	}
@@ -295,27 +303,28 @@ CorrectnessTest4() {
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 4 %s\n\n",
-		   (result >= 0)? "PASSED" : "FAILED!");
+		   (result >= 0) ? "PASSED" : "FAILED!");
 
-	return (result >= 0)? 0 : -1;
+	return (result >= 0) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
 /* Correctness Test 5: Register/UnregisterCustomer and
    GetSumCustomerPurchase */
-int
-CorrectnessTest5() {
-	
+int CorrectnessTest5()
+{
+
 	DB_T d;
 	int result;
 
 	result = 0;
-	printf("------------------------------------------------------\n" \
-		   "  Correctness Test 5:\n" \
-		   "  Register/UnregisterCustomer and GetSumCustomerPurchase\n"\
+	printf("------------------------------------------------------\n"
+		   "  Correctness Test 5:\n"
+		   "  Register/UnregisterCustomer and GetSumCustomerPurchase\n"
 		   "------------------------------------------------------\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return -1;
 	}
@@ -345,32 +354,29 @@ CorrectnessTest5() {
 	DestroyCustomerDB(d);
 
 	printf("\nCorrectness Test 5 %s\n\n",
-		   (result >= 0)? "PASSED" : "FAILED!");
+		   (result >= 0) ? "PASSED" : "FAILED!");
 
-	return (result >= 0)? 0 : -1;
+	return (result >= 0) ? 0 : -1;
 }
 /*--------------------------------------------------------------------*/
-float
-timedifference_msec(struct timeval* t0, struct timeval* t1)
+float timedifference_msec(struct timeval *t0, struct timeval *t1)
 {
-    return (t1->tv_sec - t0->tv_sec) * 1000.0f
-		+ (t1->tv_usec - t0->tv_usec) / 1000.0f;
+	return (t1->tv_sec - t0->tv_sec) * 1000.0f + (t1->tv_usec - t0->tv_usec) / 1000.0f;
 }
 /*--------------------------------------------------------------------*/
-int
-OddNumber(const char *id, const char* name, const int purchase)
+int OddNumber(const char *id, const char *name, const int purchase)
 {
 	const char *p = name + 4;
- 
-	if ((atoi(p) % 2) == 1) 
+
+	if ((atoi(p) % 2) == 1)
 		return purchase;
 
 	return 0;
 }
 /*--------------------------------------------------------------------*/
 /* Performance Test */
-void
-PerformanceTest(int num) {
+void PerformanceTest(int num)
+{
 
 	DB_T d;
 	int sum, i, res;
@@ -379,12 +385,13 @@ PerformanceTest(int num) {
 	struct timeval start, end;
 	double elapsed;
 
-	printf("---------------------------------------------------\n" \
-		   "  Performance Test\n" \
+	printf("---------------------------------------------------\n"
+		   "  Performance Test\n"
 		   "---------------------------------------------------\n\n");
 
 	d = CreateCustomerDB();
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		printf("CreateCustomerDB() failed, cannot perform the test\n");
 		return;
 	}
@@ -394,10 +401,12 @@ PerformanceTest(int num) {
 	/* start timer */
 	gettimeofday(&start, NULL);
 	/* run test */
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < num; i++)
+	{
 		sprintf(name, "name%d", i);
 		sprintf(id, "id%d", i);
-		if (RegisterCustomer(d, id, name, 10) < 0) {
+		if (RegisterCustomer(d, id, name, 10) < 0)
+		{
 			printf("RegisterCustomer returns error\n");
 			return;
 		}
@@ -409,13 +418,15 @@ PerformanceTest(int num) {
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
 	/*----------------------- Test 2 ----------------------*/
-	printf("[Test 2] Total sum of purchase of %d users\n"\
-		   "         with GetPurchaseByName()\n", num);
+	printf("[Test 2] Total sum of purchase of %d users\n"
+		   "         with GetPurchaseByName()\n",
+		   num);
 	/* start timer */
 	gettimeofday(&start, NULL);
 	/* run test */
 	sum = 0;
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < num; i++)
+	{
 		sprintf(name, "name%d", i);
 		if ((res = GetPurchaseByName(d, name)) > 0)
 			sum += res;
@@ -427,13 +438,15 @@ PerformanceTest(int num) {
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
 	/*----------------------- Test 3 ----------------------*/
-	printf("[Test 3] Total sum of purchase of %d users\n"\
-		   "         with GetPurchaseByID()\n", num);
+	printf("[Test 3] Total sum of purchase of %d users\n"
+		   "         with GetPurchaseByID()\n",
+		   num);
 	/* start timer */
 	gettimeofday(&start, NULL);
 	/* run test */
 	sum = 0;
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < num; i++)
+	{
 		sprintf(id, "id%d", i);
 		if ((res = GetPurchaseByID(d, id)) > 0)
 			sum += res;
@@ -445,7 +458,7 @@ PerformanceTest(int num) {
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
 	/*----------------------- Test 4 ----------------------*/
-	printf("[Test 4] Total sum of purchase of odd number users\n"\
+	printf("[Test 4] Total sum of purchase of odd number users\n"
 		   "         with GetSumCustomerPurchase()\n");
 	/* start timer */
 	gettimeofday(&start, NULL);
@@ -458,12 +471,14 @@ PerformanceTest(int num) {
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
 	/*----------------------- Test 5 ----------------------*/
-	printf("[Test 5] Unregister all the %d users\n"\
-		   "         with UnregisterCustomerByName()\n", num);
+	printf("[Test 5] Unregister all the %d users\n"
+		   "         with UnregisterCustomerByName()\n",
+		   num);
 	/* start timer */
 	gettimeofday(&start, NULL);
 	/* run test */
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < num; i++)
+	{
 		sprintf(name, "name%d", i);
 		assert(UnregisterCustomerByName(d, name) == 0);
 	}
@@ -473,18 +488,17 @@ PerformanceTest(int num) {
 	printf("Finished unregistering %d users\n", num);
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
-  
 	DestroyCustomerDB(d);
 }
 
 /*--------------------------------------------------------------------*/
-int
-main(int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
 	int res[5], i;
 
 	/* ./testclient -c : run all the correctness tests */
-	if (argc == 2 && strcmp("-c", argv[1]) == 0) {
+	if (argc == 2 && strcmp("-c", argv[1]) == 0)
+	{
 		res[0] = CorrectnessTest1();
 		res[1] = CorrectnessTest2();
 		res[2] = CorrectnessTest3();
@@ -493,12 +507,13 @@ main(int argc, const char *argv[])
 
 		for (i = 0; i < 5; i++)
 			printf("Test %d %s\n", i + 1,
-				   (res[i] == 0)? "PASSED" : "FAILED");
+				   (res[i] == 0) ? "PASSED" : "FAILED");
 
 		return 0;
 	}
 	/* ./testclient -c case : run the certain correctness test*/
-	else if (argc == 3 && strcmp("-c", argv[1]) == 0) {
+	else if (argc == 3 && strcmp("-c", argv[1]) == 0)
+	{
 		if (atoi(argv[2]) == 1)
 			CorrectnessTest1();
 		else if (atoi(argv[2]) == 2)
@@ -514,7 +529,8 @@ main(int argc, const char *argv[])
 		return 0;
 	}
 	/* ./testclient -p num : run the performance test */
-	else if (argc == 3 && strcmp("-p", argv[1]) == 0) {
+	else if (argc == 3 && strcmp("-p", argv[1]) == 0)
+	{
 		int n = atoi(argv[2]);
 		if (n > 0)
 			PerformanceTest(n);
@@ -522,12 +538,12 @@ main(int argc, const char *argv[])
 		return 0;
 	}
 
- error:
-	printf("Usage:  %s -c      run all the correctness tests\n"  	\
-		   "        %s -c 3    run the correctness test 3 (1~5)\n"	\
-		   "        %s -p 2000 run performance test with data set"	\
-		   " of 2000 users", argv[0], argv[0], argv[0]); 
+error:
+	printf("Usage:  %s -c      run all the correctness tests\n"
+		   "        %s -c 3    run the correctness test 3 (1~5)\n"
+		   "        %s -p 2000 run performance test with data set"
+		   " of 2000 users",
+		   argv[0], argv[0], argv[0]);
 
 	return 0;
 }
-

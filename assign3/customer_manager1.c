@@ -4,7 +4,7 @@
 #include <string.h>
 #include "customer_manager.h"
 
-#define UNIT_ARRAY_SIZE 1024
+#define UNIT_ARRAY_SIZE 20
 #define RESIZING_FACTOR 2
 
 struct UserInfo
@@ -51,6 +51,7 @@ static int ResizeDb(DB_T d)
   {
     d->pArray = temp;
     d->curArrSize = newArrSize;
+    printf("%s \t now : %d\n", "resizing success", d->curArrSize);
     return 0;
   }
 }
