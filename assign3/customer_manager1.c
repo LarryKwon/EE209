@@ -180,10 +180,8 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
     return (-1);
   }
   //copy d->curArrSize d->numItems
-  int curArrSize = d->curArrSize;
-  printf("%d\n", curArrSize);
+  int curArrSize = d->curArrSize;;
   int numItems = d->numItems;
-  printf("%d\n", numItems);
   //check whether there is same id or name//
   for (int i = 0; i < numItems; i++)
   {
