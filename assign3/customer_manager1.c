@@ -46,6 +46,7 @@ static void assertSize(DB_T d)
     d->arrState = NORMAL;
   }
 }
+/*--------------------------------------------------------------------*/
 static int ResizeDb(DB_T d)
 {
   assert(d);
@@ -151,7 +152,7 @@ void DestroyCustomerDB(DB_T d)
       d->pArray[i].id = NULL;
     }
     free(d->pArray);
-	free(d);
+    free(d);
   }
 }
 /*--------------------------------------------------------------------*/
@@ -181,7 +182,8 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
     return (-1);
   }
   //copy d->curArrSize d->numItems
-  int curArrSize = d->curArrSize;;
+  int curArrSize = d->curArrSize;
+  ;
   int numItems = d->numItems;
   //check whether there is same id or name//
   for (int i = 0; i < numItems; i++)
