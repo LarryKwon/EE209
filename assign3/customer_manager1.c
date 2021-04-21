@@ -53,7 +53,7 @@ static int ResizeDb(DB_T d)
   //validate arrSize
   assertSize(d);
 
-  struct UserInfo *temp;
+  struct UserInfo *temp = NULL;
   int newArrSize;
 
   switch (d->arrState)
@@ -70,6 +70,7 @@ static int ResizeDb(DB_T d)
     else
     {
       d->pArray = temp;
+      temp = NULL;
       d->curArrSize = newArrSize;
       printf("%s \t now : %d\n", "Resizing(expand) success", d->curArrSize);
       d->arrState = NORMAL;
@@ -79,7 +80,7 @@ static int ResizeDb(DB_T d)
   case HALF:
     newArrSize = d->curArrSize / SHRINKING_FACTOR;
     temp = (struct UserInfo *)realloc(d->pArray, newArrSize * sizeof(struct UserInfo));
-    if (temp = NULL)
+    if (temp == NULL)
     {
       printf("%s \t now : %d\n", "resizing(shrink) failed", d->curArrSize);
       d->arrState = HALF;
@@ -88,6 +89,7 @@ static int ResizeDb(DB_T d)
     else
     {
       d->pArray = temp;
+      temp = NULL;
       d->curArrSize = newArrSize;
       d->arrState = NORMAL;
       printf("%s \t now : %d\n", "Resizing(shrink) success", d->curArrSize);
@@ -179,8 +181,9 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   }
   //copy d->curArrSize d->numItems
   int curArrSize = d->curArrSize;
+  printf("%d\n", curArrSize);
   int numItems = d->numItems;
-
+  printf("%d\n", numItems);
   //check whether there is same id or name//
   for (int i = 0; i < numItems; i++)
   {
