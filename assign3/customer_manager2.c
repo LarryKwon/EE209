@@ -103,8 +103,9 @@ void DestroyCustomerDB(DB_T d)
 
         ptr->nextId = NULL;
         ptr->nextName = NULL;
+
+        free(ptr);
       }
-      free(ptr);
     }
     free(d->ht_id);
     free(d->ht_name);
