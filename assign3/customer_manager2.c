@@ -45,10 +45,14 @@ struct DB
   int curArrSize;
 };
 
-struct UserInfoChain{
+struct userChain{
   UserInfoPtr ptr;
   UserInfoPtr prevPtr;
   UserInfoPtr nextPtr;
+};
+
+static struct userChain findUserById(DB_T d, const char* id){
+  //검색해서 넘기기
 }
 
 /*------------------------------------------------------------------*/
