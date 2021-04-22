@@ -160,6 +160,9 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   {
     if (strcmp(ptr->id, newUser->id) == 0)
     {
+      free(newUser->name);
+      free(newUser->id);
+      free(newUser);
       return (-1);
     }
     nextPtr = ptr->nextId;
@@ -171,6 +174,9 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   {
     if (strcmp(ptr->name, newUser->name) == 0)
     {
+      free(newUser->name);
+      free(newUser->id);
+      free(newUser);
       return (-1);
     }
     nextPtr = ptr->nextName;
