@@ -8,7 +8,7 @@
       "name": "(gdb) 시작",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/assign3/testclient1",
+      "program": "${workspaceFolder}/assign3/testclient2",
       "args": ["-c", 1],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

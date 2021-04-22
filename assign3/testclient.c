@@ -235,7 +235,7 @@ int CorrectnessTest2()
 	// result += TestRegisterCustomer(d, "id3", "name3", 10, -1);
 	// result += TestUnregisterCustomerByID(d, "id3", 0);
 	// result += TestUnregisterCustomerByID(d, "id3", -1);
-	
+
 	for (int i = 0; i < 200; i++)
 	{
 		char *id = calloc(6, sizeof(char));
@@ -249,21 +249,18 @@ int CorrectnessTest2()
 		name = NULL;
 	}
 
-
-
 	for (int i = 0; i < 200; i++)
 	{
 		char *id = calloc(6, sizeof(char));
 		char *name = calloc(8, sizeof(char));
 		sprintf(id, "id%d", i);
 		sprintf(name, "name%d", i);
-		result += TestUnregisterCustomerByID(d, id,0);
+		result += TestUnregisterCustomerByID(d, id, 0);
 		free(id);
 		free(name);
 		id = NULL;
 		name = NULL;
 	}
-
 
 	DestroyCustomerDB(d);
 
