@@ -45,6 +45,12 @@ struct DB
   int curArrSize;
 };
 
+struct UserInfoChain{
+  UserInfoPtr ptr;
+  UserInfoPtr prevPtr;
+  UserInfoPtr nextPtr;
+}
+
 /*------------------------------------------------------------------*/
 DB_T CreateCustomerDB(void)
 {
@@ -198,9 +204,32 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
 /*--------------------------------------------------------------------*/
 int UnregisterCustomerByID(DB_T d, const char *id)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  /*search UserInfo in ht_id
+    struct userChain userIdChain= findById(d,id)
+    UserInfoPtr userPtr = UserChain.ptr;
+
+    if(UserChain.ptr == d->ht_id[hashId]){
+      UserInfo ** head = & d->ht_id[hashId];
+      *head = ptr->nextId;
+    }
+    else{
+      UserChain.prevPtr -> nextId = UserChain.nextPtr;
+    }
+
+    struct userChain userNameChain= findByName(d,userPtr->name)
+    if(UserChain.ptr == d->ht_name[hashName]){
+      UserInfo ** head = &d->ht_id[hashName];
+      *head = ptr->nextId;
+    }
+    else{
+      UserChain.prevPtr -> nextName = UserChain.nextPtr;
+    }
+
+    free(userPtr->name);
+    free(userPtr->id);
+    free(userPtr);
+
+  */
 }
 
 /*--------------------------------------------------------------------*/
