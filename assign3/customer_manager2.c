@@ -334,15 +334,15 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
     return (-1);
   }
 
-  if (ResizingHtId(d) == (-1))
-  {
-    return (-1);
-  }
+  // if (ResizingHtId(d) == (-1))
+  // {
+  //   return (-1);
+  // }
 
-  if (ResizingHtName(d) == (-1))
-  {
-    return (-1);
-  }
+  // if (ResizingHtName(d) == (-1))
+  // {
+  //   return (-1);
+  // }
   // construct UserInfo
   UserInfoPtr newUser = (UserInfoPtr)calloc(1, sizeof(struct UserInfo));
   if (newUser == NULL)
