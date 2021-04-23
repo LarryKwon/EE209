@@ -267,6 +267,11 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   return 0;
 }
 /*--------------------------------------------------------------------*/
+/*
+On success, it should return 0. Otherwise, it should return -1.
+If d or id is NULL, it is a failure. If no such item exists, it is a failure.
+Make sure that you free all the memory allocated for the item being unregistered.
+*/
 int UnregisterCustomerByID(DB_T d, const char *id)
 {
   // validate the paramter
@@ -299,7 +304,7 @@ int UnregisterCustomerByID(DB_T d, const char *id)
   {
     userChainId.prevPtr->nextId = userChainId.nextPtr;
   }
-
+  //printf("%p\n", d->ht_id[hashId]);
   struct userChain userChainName = findUserByName(d, userPtr->name);
   if (userChainName.ptr == d->ht_name[hashName])
   {
@@ -310,6 +315,7 @@ int UnregisterCustomerByID(DB_T d, const char *id)
   {
     userChainName.prevPtr->nextName = userChainName.nextPtr;
   }
+  //printf("%p\n", d->ht_name[hashName]);
 
   userPtr->nextId = NULL;
   userPtr->nextName = NULL;
@@ -351,23 +357,95 @@ int UnregisterCustomerByID(DB_T d, const char *id)
 /*--------------------------------------------------------------------*/
 int UnregisterCustomerByName(DB_T d, const char *name)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  // validate the paramter
+  if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+
+  // find the userPtr
+  struct userChain userChainName = findUserByName(d, name);
+
+  // if the user doesn't exist, findUserById return ptr with NULL
+  UserInfoPtr userPtr = userChainName.ptr;
+  if (userPtr == NULL)
+  {
+    return (-1);
+  }
+
+  // if the user exists, copy the hashId and hashName
+  int hashId = userChainName.hashId;
+  int hashName = userChainName.hashName;
+
+  //if that user is the first element in that linked list
+  if (userChainName.ptr == d->ht_name[hashName])
+  {
+    struct UserInfo **head = &d->ht_name[hashName];
+    *head = userPtr->nextName;
+  }
+  else
+  {
+    userChainName.prevPtr->nextName = userChainName.nextPtr;
+  }
+  //printf("%p\n", d->ht_id[hashId]);
+  struct userChain userChainId = findUserById(d, userPtr->id);
+  if (userChainId.ptr == d->ht_id[hashId])
+  {
+    struct UserInfo **head = &d->ht_id[hashId];
+    *head = userPtr->nextId;
+  }
+  else
+  {
+    userChainId.prevPtr->nextId = userChainId.nextPtr;
+  }
+  //printf("%p\n", d->ht_id[hashId]);
+
+  userPtr->nextId = NULL;
+  userPtr->nextName = NULL;
+  free(userPtr->name);
+  free(userPtr->id);
+  free(userPtr);
+
+  d->numItems--;
+
+  return 0;
 }
 /*--------------------------------------------------------------------*/
 int GetPurchaseByID(DB_T d, const char *id)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  //validate paramter
+  if (d == NULL || id == NULL)
+  {
+    return (-1);
+  }
+
+  UserInfoPtr userPtr = findUserById(d, id).ptr;
+  if (userPtr == NULL)
+  {
+    return (-1);
+  }
+  else
+  {
+    return userPtr->purchase;
+  }
 }
 /*--------------------------------------------------------------------*/
 int GetPurchaseByName(DB_T d, const char *name)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  //validate paramter
+  if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+  UserInfoPtr userPtr = findUserByName(d, name).ptr;
+  if (userPtr == NULL)
+  {
+    return (-1);
+  }
+  else
+  {
+    return userPtr->purchase;
+  }
 }
 /*--------------------------------------------------------------------*/
 int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
