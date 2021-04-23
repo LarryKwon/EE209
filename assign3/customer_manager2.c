@@ -140,15 +140,17 @@ static void assertSize(DB_T d)
   }
 }
 
-static void ResizingHtId(DB_T d)
+/*------------------------------------------------------------------*/
+static int ResizingHtId(DB_T d)
 {
 
   assertSize(d);
+  int newTableSize;
   switch (d->HtIdState)
   {
   case ENOUGH:
     //reallocate ht_id
-    int newTableSize = d->curArrSize * EXPANDING_FACTOR;
+    newTableSize = d->curArrSize * EXPANDING_FACTOR;
     UserInfoPtr *id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
     if (id_temp == NULL)
     {
@@ -158,8 +160,8 @@ static void ResizingHtId(DB_T d)
     {
       d->ht_id = id_temp;
       id_temp = NULL;
-      d->HtState = NORMAL;
-      d->curArrSize = newTabaleSize;
+      d->HtIdState = NORMAL;
+      d->curArrSize = newTableSize;
     }
     //traverse ht_id
     UserInfoPtr ptr = NULL;
@@ -185,14 +187,16 @@ static void ResizingHtId(DB_T d)
   }
 }
 
-static void resizingHtName(DB_T d)
+/*------------------------------------------------------------------*/
+static int ResizingHtName(DB_T d)
 {
   assertSize(d);
+  int newTableSize;
   switch (d->HtNamestate)
   {
   case ENOUGH:
     //reallocate ht_name
-    int newTableSize = d->curArrSize * EXPANDING_FACTOR;
+    newTableSize = d->curArrSize * EXPANDING_FACTOR;
     UserInfoPtr *name_temp = (UserInfoPtr *)realloc(d->ht_name, newTableSize * sizeof(UserInfoPtr));
     if (name_temp == NULL)
     {
@@ -202,7 +206,7 @@ static void resizingHtName(DB_T d)
     {
       d->ht_name = name_temp;
       name_temp = NULL;
-      d->HtState = NORMAL;
+      d->HtNamestate = NORMAL;
       d->curArrSize = newTableSize;
     }
     //traverse ht_name
@@ -268,7 +272,8 @@ DB_T CreateCustomerDB(void)
     return NULL;
   }
   d->curArrSize = BUCKET_COUNT;
-  d->HtState = NORMAL;
+  d->HtIdState = NORMAL;
+  d->HtNamestate = NORMAL;
 
   return d;
 }
@@ -329,6 +334,15 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
     return (-1);
   }
 
+  if (ResizingHtId(d) == (-1))
+  {
+    return (-1);
+  }
+
+  if (ResizingHtName(d) == (-1))
+  {
+    return (-1);
+  }
   // construct UserInfo
   UserInfoPtr newUser = (UserInfoPtr)calloc(1, sizeof(struct UserInfo));
   if (newUser == NULL)
