@@ -4,7 +4,7 @@
 #include <string.h>
 #include "customer_manager.h"
 
-#define BUCKET_COUNT 1024
+#define BUCKET_COUNT 20
 #define EXPANDING_FACTOR 2
 #define EXPANDING_CRITERIA 0.75
 enum
@@ -146,12 +146,13 @@ static int ResizingHtId(DB_T d)
 
   assertSize(d);
   int newTableSize;
+  UserInfoPtr *id_temp = NULL;
   switch (d->HtIdState)
   {
   case ENOUGH:
     //reallocate ht_id
     newTableSize = d->curArrSize * EXPANDING_FACTOR;
-    UserInfoPtr *id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
+    id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
     if (id_temp == NULL)
     {
       return (-1);
@@ -178,6 +179,7 @@ static int ResizingHtId(DB_T d)
       //link that head to toe d->ht_id[new hashId] & d->ht_name[new hashName]
       d->ht_id[i] = NULL;
       d->ht_id[newHashId] = ptr;
+      printf("%p\n", d->ht_id[newHashId]);
     }
     break;
 
