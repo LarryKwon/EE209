@@ -5,10 +5,17 @@
 #include "customer_manager.h"
 
 #define BUCKET_COUNT 1024
-
+#define EXPANDING_FACTOR 2
+#define EXPANDING_CRITERIA 0.75
 enum
 {
   HASH_MULTIPLIER = 65599
+};
+
+enum HtState
+{
+  NORMAL,
+  ENOUGH
 };
 
 /*------------------------------------------------------------------*/
@@ -43,6 +50,8 @@ struct DB
   UserInfoPtr *ht_name;
   int numItems;
   int curArrSize;
+  enum HtState HtIdState;
+  enum HtState HtNamestate;
 };
 
 struct userChain
@@ -115,7 +124,82 @@ static struct userChain findUserByName(DB_T d, const char *name)
 
   return userChainByName;
 }
+/*------------------------------------------------------------------*/
+static void assertSize(DB_T d)
+{
+  assert(d);
+  if (d->numItems >= d->curArrSize * EXPANDING_CRITERIA)
+  {
+    d->HtIdState = ENOUGH;
+    d->HtNamestate = ENOUGH;
+  }
+  else
+  {
+    d->HtIdState = NORMAL;
+    d->HtNamestate = NORMAL;
+  }
+}
 
+static void ResizingHtId(DB_T d)
+{
+
+  assertSize(d);
+  switch (d->HtIdState)
+  {
+  case ENOUGH:
+    //reallocate ht_id
+    int newTabaleSize = d->curArrSize * EXPANDING_FACTOR;
+    UserInfoPtr *id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
+    if (id_temp == NULL)
+    {
+      return (-1);
+    }
+    else
+    {
+      d->ht_id = id_temp;
+      id_temp = NULL;
+      d->HtState = NORMAL;
+      d->curArrSize = newTabaleSize;
+    }
+    //traverse ht_id
+    UserInfoPtr ptr = NULL;
+    for (int i = 0; i < ((d->curArrSize) / EXPANDING_FACTOR); i++)
+    {
+      ptr = d->ht_id[i];
+      if (ptr == NULL)
+      {
+        continue;
+      }
+      //recalculate new hashId of the head of linked list
+      int newHashId = hash_function(ptr->id, d->curArrSize);
+
+      //link that head to toe d->ht_id[new hashId] & d->ht_name[new hashName]
+      d->ht_id[i] = NULL;
+      d->ht_id[newHashId] = ptr;
+    }
+    break;
+
+  case NORMAL:
+    return 0;
+    break;
+  }
+}
+
+static void resizingHtName(DB_T d)
+{
+}
+
+/*
+(Extra credit: 15%) Implement hash table expansion. 
+When the number of nodes (user items) in a hash table reaches 75% of the number of buckets, expand the hash table to double the number of buckets. 
+That is, your initial number of buckets is 1024. 
+When the number of nodes reaches (0.75 * 1024), you expand the number of buckets to 2048. 
+Again, when the number of nodes reaches (0.75 * 2048), the next number of buckets should be 4086. 
+The max number of buckets is 1 million (1,048,576 = 2^20), 
+so even if the number of nodes exceeds 1 million, don't expand the hash table. 
+Note that even after hash table expansion, you should be able to retrieve all existing user items already registered before hash table expansion. 
+Mark if you implement hash table expansion in your readme file.
+*/
 /*------------------------------------------------------------------*/
 DB_T CreateCustomerDB(void)
 {
@@ -144,6 +228,7 @@ DB_T CreateCustomerDB(void)
     return NULL;
   }
   d->curArrSize = BUCKET_COUNT;
+  d->HtState = NORMAL;
 
   return d;
 }
