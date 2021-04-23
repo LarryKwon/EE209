@@ -148,7 +148,7 @@ static void ResizingHtId(DB_T d)
   {
   case ENOUGH:
     //reallocate ht_id
-    int newTabaleSize = d->curArrSize * EXPANDING_FACTOR;
+    int newTableSize = d->curArrSize * EXPANDING_FACTOR;
     UserInfoPtr *id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
     if (id_temp == NULL)
     {
@@ -163,7 +163,7 @@ static void ResizingHtId(DB_T d)
     }
     //traverse ht_id
     UserInfoPtr ptr = NULL;
-    for (int i = 0; i < ((d->curArrSize) / EXPANDING_FACTOR); i++)
+    for (int i = 0; i < (d->curArrSize); i++)
     {
       ptr = d->ht_id[i];
       if (ptr == NULL)
@@ -187,6 +187,46 @@ static void ResizingHtId(DB_T d)
 
 static void resizingHtName(DB_T d)
 {
+  assertSize(d);
+  switch (d->HtNamestate)
+  {
+  case ENOUGH:
+    //reallocate ht_name
+    int newTableSize = d->curArrSize * EXPANDING_FACTOR;
+    UserInfoPtr *name_temp = (UserInfoPtr *)realloc(d->ht_name, newTableSize * sizeof(UserInfoPtr));
+    if (name_temp == NULL)
+    {
+      return (-1);
+    }
+    else
+    {
+      d->ht_name = name_temp;
+      name_temp = NULL;
+      d->HtState = NORMAL;
+      d->curArrSize = newTableSize;
+    }
+    //traverse ht_name
+    UserInfoPtr ptr = NULL;
+    for (int i = 0; i < (d->curArrSize); i++)
+    {
+      ptr = d->ht_name[i];
+      if (ptr == NULL)
+      {
+        continue;
+      }
+      //recalculate new hashId of the head of linked list
+      int newHashName = hash_function(ptr->name, d->curArrSize);
+
+      //link that head to toe d->ht_id[new hashId] & d->ht_name[new hashName]
+      d->ht_name[i] = NULL;
+      d->ht_name[newHashName] = ptr;
+    }
+    break;
+
+  case NORMAL:
+    return 0;
+    break;
+  }
 }
 
 /*
