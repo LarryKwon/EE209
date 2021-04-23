@@ -450,7 +450,21 @@ int GetPurchaseByName(DB_T d, const char *name)
 /*--------------------------------------------------------------------*/
 int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
 {
-  /* fill out this function */
-  assert(0);
-  return (-1);
+  //validate paramter
+  if (d == NULL || fp == NULL)
+  {
+    return (-1);
+  }
+  UserInfoPtr ptr = NULL;
+  UserInfoPtr nextPtr = NULL;
+  int sum = 0;
+  for (int i = 0; i < d->curArrSize; i++)
+  {
+    for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
+    {
+      sum += (*fp)(ptr->id, ptr->name, ptr->purchase);
+      nextPtr = ptr->nextId;
+    }
+  }
+  return sum;
 }

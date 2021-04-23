@@ -496,18 +496,18 @@ void PerformanceTest(int num)
 	printf("Finished calculating the total sum = %d\n", sum);
 	printf("[elapsed time: %f ms]\n\n", elapsed);
 
-	// /*----------------------- Test 4 ----------------------*/
-	// printf("[Test 4] Total sum of purchase of odd number users\n"
-	// 	   "         with GetSumCustomerPurchase()\n");
-	// /* start timer */
-	// gettimeofday(&start, NULL);
-	// /* run test */
-	// sum = GetSumCustomerPurchase(d, OddNumber);
-	// /* stop timer and calulate elapsed time*/
-	// gettimeofday(&end, NULL);
-	// elapsed = timedifference_msec(&start, &end);
-	// printf("Finished calculating the odd number user sum = %d\n", sum);
-	// printf("[elapsed time: %f ms]\n\n", elapsed);
+	/*----------------------- Test 4 ----------------------*/
+	printf("[Test 4] Total sum of purchase of odd number users\n"
+		   "         with GetSumCustomerPurchase()\n");
+	/* start timer */
+	gettimeofday(&start, NULL);
+	/* run test */
+	sum = GetSumCustomerPurchase(d, OddNumber);
+	/* stop timer and calulate elapsed time*/
+	gettimeofday(&end, NULL);
+	elapsed = timedifference_msec(&start, &end);
+	printf("Finished calculating the odd number user sum = %d\n", sum);
+	printf("[elapsed time: %f ms]\n\n", elapsed);
 
 	/*----------------------- Test 5 ----------------------*/
 	printf("[Test 5] Unregister all the %d users\n"
