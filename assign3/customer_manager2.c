@@ -45,14 +45,85 @@ struct DB
   int curArrSize;
 };
 
-struct userChain{
+struct userChain
+{
   UserInfoPtr ptr;
   UserInfoPtr prevPtr;
   UserInfoPtr nextPtr;
+  int hashId;
+  int hashName;
 };
 
-static struct userChain findUserById(DB_T d, const char* id){
-  //검색해서 넘기기
+static struct userChain findUserById(DB_T d, const char *id)
+{
+  // validate the paramter
+  if (d == NULL || id == NULL)
+  {
+    return (-1);
+  }
+  int hashId = hash_function(id, d->cuarrSize);
+  struct userChain userChainById;
+  userChainById.prevPtr = d->ht_id[hashId];
+  userChainById.ptr = NULL;
+  userChainById.nextPtr = NULL;
+
+  UserInfoPtr current;
+  UserInfoPtr next;
+  UserInfoPtr prev;
+  for (current = d->ht_id[hashId]; current != NULL; current = next)
+  {
+    if (strcmp(current->id, id) == 0)
+    {
+      userChainById.ptr = current;
+      userChainById.nextPtr = walk->nextId;
+      userChainById.prevPtr = prev;
+
+      userChainById.hashId = hashId;
+      userChainById.hashName = hash_function(current->name, d->curArrSize);
+      break;
+    }
+    next = current->nextId;
+    prev = current;
+  }
+
+  return userChainById;
+}
+
+/*------------------------------------------------------------------*/
+static struct userChain findUserByName(DB_T d, const char *name)
+{
+  // validate the paramter
+  if (d == NULL || name == NULL)
+  {
+    return (-1);
+  }
+
+  int hashName = hash_function(name, d->cuarrSize);
+  struct userChain userChainByName;
+  userChainByName.prevPtr = d->ht_name[hashName];
+  userChainByName.ptr = NULL;
+  userChainByName.nextPtr = NULL;
+
+  UserInfoPtr current;
+  UserInfoPtr next;
+  UserInfoPtr prev;
+  for (current = d->ht_name[hashName]; current != NULL; current = next)
+  {
+    if (strcmp(current->name, name))
+    {
+      userChainByName.ptr = current;
+      userChainByName.nextPtr = walk->nextId;
+      userChainByName.prevPtr = prev;
+
+      userChainById.hashName = hashName;
+      userChainById.hashId = hash_function(current->id, d->curArrSize);
+      break;
+    }
+    next = current->nextId;
+    prev = current;
+  }
+
+  return userChainByName;
 }
 
 /*------------------------------------------------------------------*/
@@ -208,6 +279,57 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
 /*--------------------------------------------------------------------*/
 int UnregisterCustomerByID(DB_T d, const char *id)
 {
+  // validate the paramter
+  if (d == NULL || id == NULL)
+  {
+    return (-1);
+  }
+
+  // find the userPtr
+  struct userChain userChainId = findUserById(d, id);
+
+  // if the user doesn't exist, findUserById return ptr with NULL
+  UserInfoPtr userPtr = userChainId.ptr;
+  if (userPtr == NULL)
+  {
+    return (-1);
+  }
+
+  // if the user exists, copy the hashId and hashName
+  int hashId = userChainId.hashId;
+  int hashName = userChainId.hashName;
+
+  //if that user is the first element in that linked list
+  if (userChainId.ptr == d->ht_id[hashId])
+  {
+    struct UserInfo **head = &d->ht_id[hashId];
+    *head = userPtr->nextId;
+  }
+  else
+  {
+    userChainId.prevPtr->nextId = userChainId.nextPtr;
+  }
+
+  struct userChain userChainName = findUserByName(d, userPtr->name);
+  if (userChainName.ptr == d->ht_name[hashName])
+  {
+    struct UserInfo **head = &d->ht_name[hashName];
+    *head = userPtr->nextName;
+  }
+  else
+  {
+    userChainName.prevPtr->nextName = userChainName.nextPtr;
+  }
+
+  userPtr->nextId = NULL;
+  userPtr->nextName = NULL;
+  free(userPtr->name);
+  free(userPtr->id);
+  free(userPtr);
+
+  d->numItems--;
+
+  return 0;
   /*search UserInfo in ht_id
     struct userChain userIdChain= findById(d,id)
     UserInfoPtr userPtr = UserChain.ptr;
