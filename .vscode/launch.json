@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/assign3/testclient2",
-      "args": ["-c", 1],
+      "args": ["-c", 2],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

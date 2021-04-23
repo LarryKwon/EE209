@@ -63,9 +63,9 @@ static struct userChain findUserById(DB_T d, const char *id)
   userChainById.ptr = NULL;
   userChainById.nextPtr = NULL;
 
-  UserInfoPtr current;
-  UserInfoPtr next;
-  UserInfoPtr prev;
+  UserInfoPtr current = NULL;
+  UserInfoPtr next = NULL;
+  UserInfoPtr prev = NULL;
   for (current = d->ht_id[hashId]; current != NULL; current = next)
   {
     if (strcmp(current->id, id) == 0)
@@ -94,12 +94,12 @@ static struct userChain findUserByName(DB_T d, const char *name)
   userChainByName.ptr = NULL;
   userChainByName.nextPtr = NULL;
 
-  UserInfoPtr current;
-  UserInfoPtr next;
-  UserInfoPtr prev;
+  UserInfoPtr current = NULL;
+  UserInfoPtr next = NULL;
+  UserInfoPtr prev = NULL;
   for (current = d->ht_name[hashName]; current != NULL; current = next)
   {
-    if (strcmp(current->name, name))
+    if (strcmp(current->name, name) == 0)
     {
       userChainByName.ptr = current;
       userChainByName.nextPtr = current->nextId;
