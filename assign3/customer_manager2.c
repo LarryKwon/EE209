@@ -56,12 +56,8 @@ struct userChain
 
 static struct userChain findUserById(DB_T d, const char *id)
 {
-  // validate the paramter
-  if (d == NULL || id == NULL)
-  {
-    return (-1);
-  }
-  int hashId = hash_function(id, d->cuarrSize);
+
+  int hashId = hash_function(id, d->curArrSize);
   struct userChain userChainById;
   userChainById.prevPtr = d->ht_id[hashId];
   userChainById.ptr = NULL;
@@ -75,7 +71,7 @@ static struct userChain findUserById(DB_T d, const char *id)
     if (strcmp(current->id, id) == 0)
     {
       userChainById.ptr = current;
-      userChainById.nextPtr = walk->nextId;
+      userChainById.nextPtr = current->nextId;
       userChainById.prevPtr = prev;
 
       userChainById.hashId = hashId;
@@ -92,13 +88,7 @@ static struct userChain findUserById(DB_T d, const char *id)
 /*------------------------------------------------------------------*/
 static struct userChain findUserByName(DB_T d, const char *name)
 {
-  // validate the paramter
-  if (d == NULL || name == NULL)
-  {
-    return (-1);
-  }
-
-  int hashName = hash_function(name, d->cuarrSize);
+  int hashName = hash_function(name, d->curArrSize);
   struct userChain userChainByName;
   userChainByName.prevPtr = d->ht_name[hashName];
   userChainByName.ptr = NULL;
@@ -112,11 +102,11 @@ static struct userChain findUserByName(DB_T d, const char *name)
     if (strcmp(current->name, name))
     {
       userChainByName.ptr = current;
-      userChainByName.nextPtr = walk->nextId;
+      userChainByName.nextPtr = current->nextId;
       userChainByName.prevPtr = prev;
 
-      userChainById.hashName = hashName;
-      userChainById.hashId = hash_function(current->id, d->curArrSize);
+      userChainByName.hashName = hashName;
+      userChainByName.hashId = hash_function(current->id, d->curArrSize);
       break;
     }
     next = current->nextId;
