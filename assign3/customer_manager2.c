@@ -153,85 +153,88 @@ static int ResizingHt(DB_T d)
 {
 
   assertHtSize(d);
+  int curTableSize = d->curHtSize;
+  int curNumItems = d->numItems;
+  UserInfoPtr *ht_id_temp = d->ht_id;
+  UserInfoPtr *ht_name_temp = d->ht_name;
+
   int newTableSize;
-  UserInfoPtr *id_temp = NULL;
-  UserInfoPtr *name_temp = NULL;
+  UserInfoPtr *newHtId = NULL;
+  UserInfoPtr *newHtName = NULL;
   switch (d->HtState)
   {
   case ENOUGH:
     //reallocate ht_id
     newTableSize = d->curHtSize * EXPANDING_FACTOR;
-    id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
-    name_temp = (UserInfoPtr *)realloc(d->ht_name, newTableSize * sizeof(UserInfoPtr));
-    if (id_temp == NULL)
+    newHtId = (UserInfoPtr *)calloc(newTableSize, sizeof(UserInfoPtr));
+    newHtName = (UserInfoPtr *)calloc(newTableSize, sizeof(UserInfoPtr));
+    if (newHtId == NULL)
     {
       return (-1);
     }
-    else if (name_temp == NULL)
+    else if (newHtName == NULL)
     {
       return (-1);
     }
     else
     {
-      d->ht_id = id_temp;
-      id_temp = NULL;
-      d->ht_name = name_temp;
-      name_temp = NULL;
+      d->ht_id = newHtId;
+      newHtId = NULL;
+      d->ht_name = newHtName;
+      newHtName = NULL;
       d->HtState = NORMAL;
       d->curHtSize = newTableSize;
     }
-    //traverse ht_id
+
+    //traverse ht_id_temp and unregister the user and register to the new d;
     UserInfoPtr temp = NULL;
     UserInfoPtr ptr = NULL;
     UserInfoPtr nextPtr = NULL;
-    for (int i = 0; i < (d->curHtSize / EXPANDING_FACTOR); i++)
+    for (int i = 0; i < curTableSize; i++)
     {
-      temp = d->ht_id[i];
-      if (temp == NULL)
+      for (ptr = ht_id_temp[i]; ptr != NULL; ptr = nextPtr)
       {
-        continue;
-      }
-      else
-      {
-        d->ht_id[i] = NULL;
-        for (ptr = temp; ptr != NULL; ptr = nextPtr)
+        nextPtr = ptr->nextId;
+
+        //copy items
+        char *id_copy = NULL;
+        char *name_copy = NULL;
+        if ((id_copy = strdup(ptr->id)) == NULL)
         {
-          nextPtr = ptr->nextId;
-          char *id_copy = NULL;
-          char *name_copy = NULL;
-
-          //copy items
-          if ((id_copy = strdup(ptr->id)) == NULL)
-          {
-            return (-1);
-          }
-          if ((name_copy = strdup(ptr->name)) == NULL)
-          {
-            return (-1);
-          }
-          int purchase_copy = ptr->purchase;
-          int hashName_temp = hash_function(name_copy, d->curHtSize / EXPANDING_FACTOR);
-          d->ht_name[hashName_temp] = NULL;
-          //unregister original
-          free(ptr->id);
-          free(ptr->name);
-          ptr->id = NULL;
-          ptr->name = NULL;
-
-          ptr->nextId = NULL;
-          ptr->nextName = NULL;
-          free(ptr);
-          d->numItems--;
-
-          if (RegisterCustomer(d, id_copy, name_copy, purchase_copy) == (-1))
-          {
-            return (-1);
-          }
-          free(id_copy);
-          free(name_copy);
+          return (-1);
         }
+        if ((name_copy = strdup(ptr->name)) == NULL)
+        {
+          return (-1);
+        }
+        int purchase_copy = ptr->purchase;
+        //int hashName_temp = hash_function(name_copy, d->curHtSize / EXPANDING_FACTOR);
+
+        //Register to the new d;
+        if (RegisterCustomer(d, id_copy, name_copy, purchase_copy) == (-1))
+        {
+          return (-1);
+        }
+        free(id_copy);
+        free(name_copy);
+
+        //free original
+        free(ptr->id);
+        free(ptr->name);
+        ptr->id = NULL;
+        ptr->name = NULL;
+        ptr->purchase = 0;
+
+        ptr->nextId = NULL;
+        ptr->nextName = NULL;
+
+        free(ptr);
       }
+      ht_id_temp[i] = NULL;
+      ht_name_temp[i] = NULL;
     }
+    free(ht_id_temp);
+    free(ht_name_temp);
     break;
 
   case NORMAL:
@@ -302,6 +305,8 @@ void DestroyCustomerDB(DB_T d)
 
         free(ptr);
       }
+      d->ht_id[i] = NULL;
+      d->ht_name[i] = NULL;
     }
     free(d->ht_id);
     free(d->ht_name);
@@ -352,7 +357,7 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   // Create hashName, hashId
   int hashName = hash_function(newUser->name, d->curHtSize);
   int hashId = hash_function(newUser->id, d->curHtSize);
-  printf("hashName: %d , hashId: %d\n", hashName, hashId);
+  //printf("hashName: %d , hashId: %d\n", hashName, hashId);
 
   // check whether there is same thing in ht_id or ht_name
   UserInfoPtr ptr = NULL;
