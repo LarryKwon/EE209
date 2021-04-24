@@ -255,7 +255,7 @@ int CorrectnessTest2()
 		char *name = calloc(8, sizeof(char));
 		sprintf(id, "id%d", i);
 		sprintf(name, "name%d", i);
-		result += TestUnregisterCustomerByID(d, id, 0);
+		result += TestUnregisterCustomerByName(d, name, 0);
 		free(id);
 		free(name);
 		id = NULL;
