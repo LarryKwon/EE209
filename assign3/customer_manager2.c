@@ -49,7 +49,8 @@ struct DB
   UserInfoPtr *ht_id;
   UserInfoPtr *ht_name;
   int numItems;
-  int curArrSize;
+  int curHtIdSize;
+  int curHtNameSize;
   enum HtState HtIdState;
   enum HtState HtNamestate;
 };
@@ -66,7 +67,7 @@ struct userChain
 static struct userChain findUserById(DB_T d, const char *id)
 {
 
-  int hashId = hash_function(id, d->curArrSize);
+  int hashId = hash_function(id, d->curHtIdSize);
   struct userChain userChainById;
   userChainById.prevPtr = d->ht_id[hashId];
   userChainById.ptr = NULL;
@@ -84,7 +85,7 @@ static struct userChain findUserById(DB_T d, const char *id)
       userChainById.prevPtr = prev;
 
       userChainById.hashId = hashId;
-      userChainById.hashName = hash_function(current->name, d->curArrSize);
+      userChainById.hashName = hash_function(current->name, d->curHtIdSize);
       break;
     }
     next = current->nextId;
@@ -97,7 +98,7 @@ static struct userChain findUserById(DB_T d, const char *id)
 /*------------------------------------------------------------------*/
 static struct userChain findUserByName(DB_T d, const char *name)
 {
-  int hashName = hash_function(name, d->curArrSize);
+  int hashName = hash_function(name, d->curHtNameSize);
   struct userChain userChainByName;
   userChainByName.prevPtr = d->ht_name[hashName];
   userChainByName.ptr = NULL;
@@ -115,7 +116,7 @@ static struct userChain findUserByName(DB_T d, const char *name)
       userChainByName.prevPtr = prev;
 
       userChainByName.hashName = hashName;
-      userChainByName.hashId = hash_function(current->id, d->curArrSize);
+      userChainByName.hashId = hash_function(current->id, d->curHtNameSize);
       break;
     }
     next = current->nextId;
@@ -125,17 +126,29 @@ static struct userChain findUserByName(DB_T d, const char *name)
   return userChainByName;
 }
 /*------------------------------------------------------------------*/
-static void assertSize(DB_T d)
+static void assertHtIdSize(DB_T d)
 {
   assert(d);
-  if (d->numItems >= d->curArrSize * EXPANDING_CRITERIA)
+  if (d->numItems >= d->curHtIdSize * EXPANDING_CRITERIA)
   {
     d->HtIdState = ENOUGH;
-    d->HtNamestate = ENOUGH;
   }
   else
   {
     d->HtIdState = NORMAL;
+  }
+}
+
+/*------------------------------------------------------------------*/
+static void assertHtNameSize(DB_T d)
+{
+  assert(d);
+  if (d->numItems >= d->curHtNameSize * EXPANDING_CRITERIA)
+  {
+    d->HtNamestate = ENOUGH;
+  }
+  else
+  {
     d->HtNamestate = NORMAL;
   }
 }
@@ -144,14 +157,14 @@ static void assertSize(DB_T d)
 static int ResizingHtId(DB_T d)
 {
 
-  assertSize(d);
+  assertHtIdSize(d);
   int newTableSize;
   UserInfoPtr *id_temp = NULL;
   switch (d->HtIdState)
   {
   case ENOUGH:
     //reallocate ht_id
-    newTableSize = d->curArrSize * EXPANDING_FACTOR;
+    newTableSize = d->curHtIdSize * EXPANDING_FACTOR;
     id_temp = (UserInfoPtr *)realloc(d->ht_id, newTableSize * sizeof(UserInfoPtr));
     if (id_temp == NULL)
     {
@@ -162,19 +175,47 @@ static int ResizingHtId(DB_T d)
       d->ht_id = id_temp;
       id_temp = NULL;
       d->HtIdState = NORMAL;
-      d->curArrSize = newTableSize;
+      d->curHtIdSize = newTableSize;
     }
     //traverse ht_id
     UserInfoPtr ptr = NULL;
-    for (int i = 0; i < (d->curArrSize); i++)
+    UserInfoPtr nextPtr = NULL;
+    for (int i = 0; i < (d->curHtIdSize); i++)
     {
-      ptr = d->ht_id[i];
-      if (ptr == NULL)
+      for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
       {
-        continue;
+        if (ptr == NULL)
+        {
+          continue;
+        }
+        else
+        {
+          const char *id_copy = NULL;
+          const char *name_copy = NULL;
+
+          if ((id_copy = strdup(ptr->id)) == NULL)
+          {
+            return (-1);
+          }
+          if ((name_copy = strdup(ptr->name)) == NULL)
+          {
+            return (-1);
+          }
+          int purchase_copy = ptr->purchase;
+
+          if (RegisterCustomer(d, id_copy, name_copy, purchase_copy) == (-1))
+          {
+            return (-1);
+          }
+
+          free(id_copy);
+          free(name_copy);
+
+          free(ptr->id);
+          free(ptr->name);
+          free(ptr);
+        }
       }
-      //recalculate new hashId of the head of linked list
-      int newHashId = hash_function(ptr->id, d->curArrSize);
 
       //link that head to toe d->ht_id[new hashId] & d->ht_name[new hashName]
       d->ht_id[i] = NULL;
@@ -192,13 +233,13 @@ static int ResizingHtId(DB_T d)
 /*------------------------------------------------------------------*/
 static int ResizingHtName(DB_T d)
 {
-  assertSize(d);
+  assertHtNameSize(d);
   int newTableSize;
   switch (d->HtNamestate)
   {
   case ENOUGH:
     //reallocate ht_name
-    newTableSize = d->curArrSize * EXPANDING_FACTOR;
+    newTableSize = d->curHtNameSize * EXPANDING_FACTOR;
     UserInfoPtr *name_temp = (UserInfoPtr *)realloc(d->ht_name, newTableSize * sizeof(UserInfoPtr));
     if (name_temp == NULL)
     {
@@ -209,11 +250,11 @@ static int ResizingHtName(DB_T d)
       d->ht_name = name_temp;
       name_temp = NULL;
       d->HtNamestate = NORMAL;
-      d->curArrSize = newTableSize;
+      d->curHtNameSize = newTableSize;
     }
     //traverse ht_name
     UserInfoPtr ptr = NULL;
-    for (int i = 0; i < (d->curArrSize); i++)
+    for (int i = 0; i < (d->curHtNameSize); i++)
     {
       ptr = d->ht_name[i];
       if (ptr == NULL)
@@ -221,7 +262,7 @@ static int ResizingHtName(DB_T d)
         continue;
       }
       //recalculate new hashId of the head of linked list
-      int newHashName = hash_function(ptr->name, d->curArrSize);
+      int newHashName = hash_function(ptr->name, d->curHtNameSize);
 
       //link that head to toe d->ht_id[new hashId] & d->ht_name[new hashName]
       d->ht_name[i] = NULL;
@@ -273,7 +314,8 @@ DB_T CreateCustomerDB(void)
     fprintf(stderr, "Can't allocate a memory for ht_name\n");
     return NULL;
   }
-  d->curArrSize = BUCKET_COUNT;
+  d->curHtIdSize = BUCKET_COUNT;
+  d->curHtNameSize = BUCKET_COUNT;
   d->HtIdState = NORMAL;
   d->HtNamestate = NORMAL;
 
@@ -293,7 +335,7 @@ void DestroyCustomerDB(DB_T d)
   {
     UserInfoPtr ptr = NULL;
     UserInfoPtr nextPtr = NULL;
-    for (int i = 0; i < d->curArrSize; i++)
+    for (int i = 0; i < d->curHtIdSize; i++)
     {
       for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
       {
@@ -362,8 +404,8 @@ int RegisterCustomer(DB_T d, const char *id, const char *name, const int purchas
   newUser->purchase = purchase;
 
   // Create hashName, hashId
-  int hashName = hash_function(newUser->name, d->curArrSize);
-  int hashId = hash_function(newUser->id, d->curArrSize);
+  int hashName = hash_function(newUser->name, d->curHtNameSize);
+  int hashId = hash_function(newUser->id, d->curHtIdSize);
 
   // check whether there is same thing in ht_id or ht_name
   UserInfoPtr ptr = NULL;
@@ -599,7 +641,7 @@ int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
   UserInfoPtr ptr = NULL;
   UserInfoPtr nextPtr = NULL;
   int sum = 0;
-  for (int i = 0; i < d->curArrSize; i++)
+  for (int i = 0; i < d->curHtIdSize; i++)
   {
     for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
     {
