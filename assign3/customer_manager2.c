@@ -548,19 +548,12 @@ int GetPurchaseByID(DB_T d, const char *id)
     return (-1);
   }
 
-  UserInfoPtr ptr = NULL;
-  UserInfoPtr nextPtr = NULL;
-  for (int i = 0; i < d->curHtSize; i++)
+  UserInfoPtr user = findUserById(d, id).ptr;
+  if (user == NULL)
   {
-    for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
-    {
-      nextPtr = ptr->nextId;
-      if (strcmp(id, ptr->id) == 0)
-      {
-        return ptr->purchase;
-      }
-    }
+    return (-1);
   }
+  return user->purchase;
 }
 /*--------------------------------------------------------------------*/
 int GetPurchaseByName(DB_T d, const char *name)
@@ -571,20 +564,12 @@ int GetPurchaseByName(DB_T d, const char *name)
     return (-1);
   }
 
-  UserInfoPtr ptr = NULL;
-  UserInfoPtr nextPtr = NULL;
-  for (int i = 0; i < d->curHtSize; i++)
+  UserInfoPtr user = findUserByName(d, name).ptr;
+  if (user == NULL)
   {
-    for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
-    {
-      nextPtr = ptr->nextId;
-      if (strcmp(name, ptr->name) == 0)
-      {
-        return ptr->purchase;
-      }
-    }
+    return (-1);
   }
-  return (-1);
+  return user->purchase;
 }
 /*--------------------------------------------------------------------*/
 int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
