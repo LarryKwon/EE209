@@ -58,70 +58,65 @@ struct userChain
   UserInfoPtr ptr;
   UserInfoPtr prevPtr;
   UserInfoPtr nextPtr;
-  int hashId;
-  int hashName;
 };
 
 static struct userChain findUserById(DB_T d, const char *id)
 {
-
-  int hashId = hash_function(id, d->curHtSize);
-  struct userChain userChainById;
-  userChainById.prevPtr = d->ht_id[hashId];
-  userChainById.ptr = NULL;
-  userChainById.nextPtr = NULL;
+  struct userChain userChainId;
+  userChainId.ptr = NULL;
+  userChainId.prevPtr = NULL;
+  userChainId.nextPtr = NULL;
 
   UserInfoPtr current = NULL;
   UserInfoPtr next = NULL;
   UserInfoPtr prev = NULL;
-  for (current = d->ht_id[hashId]; current != NULL; current = next)
+  for (int i = 0; i < d->curHtSize; i++)
   {
-    if (strcmp(current->id, id) == 0)
+    for (current = d->ht_id[i]; current != NULL; current = next)
     {
-      userChainById.ptr = current;
-      userChainById.nextPtr = current->nextId;
-      userChainById.prevPtr = prev;
-
-      userChainById.hashId = hashId;
-      userChainById.hashName = hash_function(current->name, d->curHtSize);
-      break;
+      next = current->nextId;
+      if (strcmp(current->id, id) == 0)
+      {
+        userChainId.ptr = current;
+        userChainId.prevPtr = prev;
+        userChainId.nextPtr = next;
+        return userChainId;
+      }
+      prev = current;
     }
-    next = current->nextId;
-    prev = current;
   }
 
-  return userChainById;
+  return userChainId;
 }
 
 /*------------------------------------------------------------------*/
 static struct userChain findUserByName(DB_T d, const char *name)
 {
-  int hashName = hash_function(name, d->curHtSize);
-  struct userChain userChainByName;
-  userChainByName.prevPtr = d->ht_name[hashName];
-  userChainByName.ptr = NULL;
-  userChainByName.nextPtr = NULL;
+  struct userChain userChainName;
+  userChainName.ptr = NULL;
+  userChainName.prevPtr = NULL;
+  userChainName.nextPtr = NULL;
 
   UserInfoPtr current = NULL;
   UserInfoPtr next = NULL;
   UserInfoPtr prev = NULL;
-  for (current = d->ht_name[hashName]; current != NULL; current = next)
+  for (int i = 0; i < d->curHtSize; i++)
   {
-    if (strcmp(current->name, name) == 0)
+    for (current = d->ht_name[i]; current != NULL; current = next)
     {
-      userChainByName.ptr = current;
-      userChainByName.nextPtr = current->nextId;
-      userChainByName.prevPtr = prev;
-
-      userChainByName.hashName = hashName;
-      userChainByName.hashId = hash_function(current->id, d->curHtSize);
-      break;
+      next = current->nextName;
+      if (strcmp(current->name, name) == 0)
+      {
+        userChainName.ptr = current;
+        userChainName.prevPtr = prev;
+        userChainName.nextPtr = next;
+        return userChainName;
+      }
+      prev = current;
     }
-    next = current->nextId;
-    prev = current;
   }
 
-  return userChainByName;
+  return userChainName;
 }
 /*------------------------------------------------------------------*/
 static void assertHtSize(DB_T d)
@@ -418,34 +413,33 @@ int UnregisterCustomerByID(DB_T d, const char *id)
 
   // find the userPtr
   struct userChain userChainId = findUserById(d, id);
-
+  UserInfoPtr user = userChainId.ptr;
   // if the user doesn't exist, findUserById return ptr with NULL
-  UserInfoPtr userPtr = userChainId.ptr;
-  if (userPtr == NULL)
+  if (user == NULL)
   {
     return (-1);
   }
 
   // if the user exists, copy the hashId and hashName
-  int hashId = userChainId.hashId;
-  int hashName = userChainId.hashName;
+  int hashId = hash_function(user->id, d->curHtSize);
+  int hashName = hash_function(user->name, d->curHtSize);
 
   //if that user is the first element in that linked list
-  if (userChainId.ptr == d->ht_id[hashId])
+  if (user == d->ht_id[hashId])
   {
     struct UserInfo **head = &d->ht_id[hashId];
-    *head = userPtr->nextId;
+    *head = user->nextId;
   }
   else
   {
     userChainId.prevPtr->nextId = userChainId.nextPtr;
   }
   //printf("%p\n", d->ht_id[hashId]);
-  struct userChain userChainName = findUserByName(d, userPtr->name);
-  if (userChainName.ptr == d->ht_name[hashName])
+  struct userChain userChainName = findUserByName(d, user->name);
+  if (user == d->ht_name[hashName])
   {
     struct UserInfo **head = &d->ht_name[hashName];
-    *head = userPtr->nextName;
+    *head = user->nextName;
   }
   else
   {
@@ -453,11 +447,11 @@ int UnregisterCustomerByID(DB_T d, const char *id)
   }
   //printf("%p\n", d->ht_name[hashName]);
 
-  userPtr->nextId = NULL;
-  userPtr->nextName = NULL;
-  free(userPtr->name);
-  free(userPtr->id);
-  free(userPtr);
+  user->nextId = NULL;
+  user->nextName = NULL;
+  free(user->name);
+  free(user->id);
+  free(user);
 
   d->numItems--;
 
@@ -501,46 +495,45 @@ int UnregisterCustomerByName(DB_T d, const char *name)
 
   // find the userPtr
   struct userChain userChainName = findUserByName(d, name);
-
+  UserInfoPtr user = userChainName.ptr;
   // if the user doesn't exist, findUserById return ptr with NULL
-  UserInfoPtr userPtr = userChainName.ptr;
-  if (userPtr == NULL)
+  if (user == NULL)
   {
     return (-1);
   }
 
   // if the user exists, copy the hashId and hashName
-  int hashId = userChainName.hashId;
-  int hashName = userChainName.hashName;
+  int hashId = hash_function(user->id, d->curHtSize);
+  int hashName = hash_function(user->name, d->curHtSize);
 
   //if that user is the first element in that linked list
-  if (userChainName.ptr == d->ht_name[hashName])
+  if (user == d->ht_name[hashName])
   {
     struct UserInfo **head = &d->ht_name[hashName];
-    *head = userPtr->nextName;
+    *head = user->nextName;
   }
   else
   {
     userChainName.prevPtr->nextName = userChainName.nextPtr;
   }
   //printf("%p\n", d->ht_id[hashId]);
-  struct userChain userChainId = findUserById(d, userPtr->id);
-  if (userChainId.ptr == d->ht_id[hashId])
+  struct userChain userChainId = findUserById(d, user->id);
+  if (user == d->ht_id[hashId])
   {
     struct UserInfo **head = &d->ht_id[hashId];
-    *head = userPtr->nextId;
+    *head = user->nextId;
   }
   else
   {
     userChainId.prevPtr->nextId = userChainId.nextPtr;
   }
-  //printf("%p\n", d->ht_id[hashId]);
+  //printf("%p\n", d->ht_name[hashName]);
 
-  userPtr->nextId = NULL;
-  userPtr->nextName = NULL;
-  free(userPtr->name);
-  free(userPtr->id);
-  free(userPtr);
+  user->nextId = NULL;
+  user->nextName = NULL;
+  free(user->name);
+  free(user->id);
+  free(user);
 
   d->numItems--;
 
@@ -555,14 +548,18 @@ int GetPurchaseByID(DB_T d, const char *id)
     return (-1);
   }
 
-  UserInfoPtr userPtr = findUserById(d, id).ptr;
-  if (userPtr == NULL)
+  UserInfoPtr ptr = NULL;
+  UserInfoPtr nextPtr = NULL;
+  for (int i = 0; i < d->curHtSize; i++)
   {
-    return (-1);
-  }
-  else
-  {
-    return userPtr->purchase;
+    for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
+    {
+      nextPtr = ptr->nextId;
+      if (strcmp(id, ptr->id) == 0)
+      {
+        return ptr->purchase;
+      }
+    }
   }
 }
 /*--------------------------------------------------------------------*/
@@ -573,15 +570,21 @@ int GetPurchaseByName(DB_T d, const char *name)
   {
     return (-1);
   }
-  UserInfoPtr userPtr = findUserByName(d, name).ptr;
-  if (userPtr == NULL)
+
+  UserInfoPtr ptr = NULL;
+  UserInfoPtr nextPtr = NULL;
+  for (int i = 0; i < d->curHtSize; i++)
   {
-    return (-1);
+    for (ptr = d->ht_id[i]; ptr != NULL; ptr = nextPtr)
+    {
+      nextPtr = ptr->nextId;
+      if (strcmp(name, ptr->name) == 0)
+      {
+        return ptr->purchase;
+      }
+    }
   }
-  else
-  {
-    return userPtr->purchase;
-  }
+  return (-1);
 }
 /*--------------------------------------------------------------------*/
 int GetSumCustomerPurchase(DB_T d, FUNCPTR_T fp)
