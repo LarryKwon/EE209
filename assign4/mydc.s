@@ -67,8 +67,11 @@ main:
         //if(isdigit(buffer[0])==0)
         movl $0, %eax
         movb buffer(%eax), %al
+
+        //if(buffer[0]=='_') goto negative_num
         cmp $0x5F , %al
         je negative_num
+        
         pushl %eax
         call isdigit
         addl $4, %esp
@@ -79,9 +82,6 @@ main:
         jne num
     
     num:
-        //if(bufer[0]=='_') buffer[0] = negative_sign
-        movl $buffer , %eax
-        movl (%eax), %eax
         pushl $buffer
         call atoi
         addl $4, %esp
@@ -90,9 +90,26 @@ main:
         
 
     negative_num:
+        //if(buffer[1]==EOF) goto loop
+        movl $1, %eax
+        movb buffer(%eax), %al
+        cmpb $EOF, %al
+        jep loop
+        // change '_' -> '-'
+        movl $0, %eax
+        addl $buffer, %eax
+        movb $0x2D , (%eax)
+
+        //int n = atoi(buffer)
+        pushl $buffer
+        call atoi
+        addl $4, %esp
+        //push(n);
+        pushl %eax
+        jmp loop
 
     else:
-    
+        
     exit:
     
     plus:
