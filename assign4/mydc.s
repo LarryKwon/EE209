@@ -94,7 +94,7 @@ main:
         movl $1, %eax
         movb buffer(%eax), %al
         cmpb $EOF, %al
-        jep loop
+        je loop
         // change '_' -> '-'
         movl $0, %eax
         addl $buffer, %eax
@@ -109,21 +109,162 @@ main:
         jmp loop
 
     else:
+		//if(buffer[0]!='p') goto exit
+		movl $0, %eax
+		movb buffer(%eax), %al
+		cmpb $0x70, %al
+		jne exit
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty
+		//printf("%d\n",(int)stack.top())
+		movl (%esp), %eax
+		pushl %eax
+		pushl $printfFormat
+		call printf
+		addl $8, %esp
+		jmp loop
         
     exit:
+		//if(buffer[0]!='q') goto plus
+		movl $0, %eax
+		movb buffer(%eax), %al
+		cmpb $0x71, %al
+		je quit
+		jne plus
     
-    plus:
-
-    error:
+	plus:
+		//if(buffer[0]!='+') goto minus
+		movl $0, %eax
+		movb buffer(%eax), %al
+		cmpb $0x28, %al
+		jne minus
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty
+		// a = (int)stack.pop()
+		popl %edx
+		//if(%esp == %ebp) goto error
+		cmp %esp, %ebp
+		je error
+		//b = (int)stack.pop()
+		popl %eax
+		addl %edx , %eax
+		pushl %eax
+		movl $0, %edx
+		movl $0, %eax
+		jmp loop
+    
+	error:
+		//stack.push(a)
+		pushl %edx
+		movl $0, %edx
+		//goto empty
+		jmp empty
 
     minus:
+		//if(buffer[0]!='-') goto multiply
+		movl $0, %eax
+		movb buffer(%eax) , %al
+		cmpb $0x2D, %al
+		jne multiply
+
+		//int a,b
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty
+		//a = (int)stack.pop()
+		popl %edx
+		//b=(int)stack.pop()
+		
+		cmp %esp, %ebp
+		je error
+		popl %eax
+		//res = a-b
+		subl %edx, %eax
+		pusl %eax
+		movl $0, %eax
+		movl $0, %edx
+		jmp loop
 
     multiply:
+		//if(buffer[0]!='*') goto divide
+		movl $0, %eax
+		movb buffer(%eax) , %al
+		cmpb $0x2A, %al
+		jne divide
+
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty
+
+		//a = (int)stack.pop()
+		popl %edx
+		//b=(int)stack.pop()
+		cmp %esp, %ebp
+		je error
+		popl %eax
+
+		imul %edx
+		pushl %eax
+		movl $0, %edx
+		movl $0, %eax
+		jmp loop
 
     divide:
+		//if(buffer[0]!='/') goto remainder
+		movl $0, %eax
+		movb buffer(%eax) , %al
+		cmpb $0x2F, %al
+		jne power
+
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty
+
+		//a = (int)stack.pop()
+		popl %edx
+		//b=(int)stack.pop()
+		cmp %esp, %ebp
+		je error
+		
+		popl %eax
+		//res = b/a, quotinent
+		movl %edx, %ecx
+		cdq
+		idivl %ecx
+		pushl %eax
+		movl $0, %edx
+		movl $0, %eax
+		jmp loop
 
     remainder:
+		//if(buffer[0]!='/') goto power
+		movl $0, %eax
+		movb buffer(%eax) , %al
+		cmpb $0x25, %al
+		jne power
 
+		//if(%esp == %ebp) goto empty
+		cmp %esp, %ebp
+		je empty		
+
+		//a = (int)stack.pop()
+		popl %edx
+		//b=(int)stack.pop()
+		cmp %esp, %ebp
+		je error
+		
+		popl %eax
+		//res = b/a, quotinent
+		movl %edx, %ecx
+		cdq
+		idivl %ecx
+		pushl %edx
+		movl $0, %edx
+		movl $0, %eax
+		jmp loop
+		
     power:
 
     op_f:
