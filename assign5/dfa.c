@@ -6,6 +6,7 @@
 /*--------------------------------------------------------------------*/
 
 #include "dynarray.h"
+#include "token.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,93 +14,9 @@
 #include <assert.h>
 
 /*--------------------------------------------------------------------*/
-
 enum {MAX_LINE_SIZE = 1024};
 
 enum {FALSE, TRUE};
-
-enum TokenType {TOKEN_NUMBER, TOKEN_WORD};
-
-/*--------------------------------------------------------------------*/
-
-/* A Token is either a number or a word, expressed as a string. */
-
-struct Token
-{
-   enum TokenType eType;
-   /* The type of the token. */
-
-   char *pcValue;
-   /* The string which is the token's value. */
-};
-
-/*--------------------------------------------------------------------*/
-
-static void freeToken(void *pvItem, void *pvExtra)
-
-/* Free token pvItem.  pvExtra is unused. */
-
-{
-   struct Token *psToken = (struct Token*)pvItem;
-   free(psToken->pcValue);
-   free(psToken);
-}
-
-/*--------------------------------------------------------------------*/
-
-static void printNumberToken(void *pvItem, void *pvExtra)
-
-/* Print token pvItem to stdout iff it is a number.  pvExtra is
-   unused. */
-
-{
-   struct Token *psToken = (struct Token*)pvItem;
-   if (psToken->eType == TOKEN_NUMBER)
-      printf("%s ", psToken->pcValue);
-}
-
-/*--------------------------------------------------------------------*/
-
-static void printWordToken(void *pvItem, void *pvExtra)
-
-/* Print token pvItem to stdout iff it is a word.  pvExtra is
-   unused. */
-
-{
-   struct Token *psToken = (struct Token*)pvItem;
-   if (psToken->eType == TOKEN_WORD)
-      printf("%s ", psToken->pcValue);
-}
-
-/*--------------------------------------------------------------------*/
-
-static struct Token *makeToken(enum TokenType eTokenType,
-   char *pcValue)
-
-/* Create and return a Token whose type is eTokenType and whose
-   value consists of string pcValue.  Return NULL if insufficient
-   memory is available.  The caller owns the Token. */
-
-{
-   struct Token *psToken;
-
-   psToken = (struct Token*)malloc(sizeof(struct Token));
-   if (psToken == NULL)
-      return NULL;
-
-   psToken->eType = eTokenType;
-
-   psToken->pcValue = (char*)malloc(strlen(pcValue) + 1);
-   if (psToken->pcValue == NULL)
-   {
-      free(psToken);
-      return NULL;
-   }
-
-   strcpy(psToken->pcValue, pcValue);
-
-   return psToken;
-}
 
 /*--------------------------------------------------------------------*/
 
