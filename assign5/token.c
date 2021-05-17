@@ -22,7 +22,7 @@ struct Token
 
 void freeToken(void *pvItem, void *pvExtra)
 {
-   struct Token *psToken = (struct Token*)pvItem;
+   struct Token *psToken = (struct Token *)pvItem;
    free(psToken->pcValue);
    free(psToken);
 }
@@ -31,7 +31,7 @@ void freeToken(void *pvItem, void *pvExtra)
 
 void printNumberToken(void *pvItem, void *pvExtra)
 {
-   struct Token *psToken = (struct Token*)pvItem;
+   struct Token *psToken = (struct Token *)pvItem;
    if (psToken->eType == TOKEN_NUMBER)
       printf("%s ", psToken->pcValue);
 }
@@ -40,25 +40,41 @@ void printNumberToken(void *pvItem, void *pvExtra)
 
 void printWordToken(void *pvItem, void *pvExtra)
 {
-   struct Token *psToken = (struct Token*)pvItem;
+   struct Token *psToken = (struct Token *)pvItem;
    if (psToken->eType == TOKEN_WORD)
       printf("%s ", psToken->pcValue);
 }
 
 /*--------------------------------------------------------------------*/
 
+void printStringToken(void *pvItem, void *pvExtra)
+{
+   struct Token *psToken = (struct Token *)pvItem;
+   if (psToken->eType == TOKEN_STRING)
+      printf("%s ", psToken->pcValue);
+}
+
+/*--------------------------------------------------------------------*/
+void printAnyToken(void *pvItem, void *pvExtra)
+{
+   struct Token *psToken = (struct Token *)pvItem;
+   printf("%d : %s \n", psToken->eType, psToken->pcValue);
+}
+
+/*--------------------------------------------------------------------*/
+
 struct Token *makeToken(enum TokenType eTokenType,
-   char *pcValue)
+                        char *pcValue)
 {
    struct Token *psToken;
 
-   psToken = (struct Token*)malloc(sizeof(struct Token));
+   psToken = (struct Token *)malloc(sizeof(struct Token));
    if (psToken == NULL)
       return NULL;
 
    psToken->eType = eTokenType;
 
-   psToken->pcValue = (char*)malloc(strlen(pcValue) + 1);
+   psToken->pcValue = (char *)malloc(strlen(pcValue) + 1);
    if (psToken->pcValue == NULL)
    {
       free(psToken);

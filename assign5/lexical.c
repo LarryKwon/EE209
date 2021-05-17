@@ -167,6 +167,19 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
          }
          else if (c == '\"')
          {
+            acValue[iValueIndex] = '\0';
+            psToken = makeToken(TOKEN_WORD, acValue);
+            if (psToken == NULL)
+            {
+               fprintf(stderr, "Cannot allocate memory\n");
+               return FALSE;
+            }
+            if (!DynArray_add(oTokens, psToken))
+            {
+               fprintf(stderr, "Cannot allocate memory\n");
+               return FALSE;
+            }
+            iValueIndex = 0;
             eState = STATE_IN_STR;
          }
          else if (isalpha(c) || isdigit(c))
@@ -199,12 +212,19 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
             }
             iValueIndex = 0;
 
-            eState = STATE_START
+            eState = STATE_START;
+         }
+         else if ((c == '\n') || (c == '\0'))
+         {
+            fprintf(stderr, "ERROR - unmatched quote\n");
+            return FALSE;
          }
          else
          {
+            acValue[iValueIndex++] = c;
             eState = STATE_IN_STR;
          }
+         break;
 
       default:
          assert(FALSE);
@@ -237,12 +257,16 @@ int main(void)
       iSuccessful = lexLine(acLine, oTokens);
       if (iSuccessful)
       {
+         /*
          printf("Numbers:  ");
          DynArray_map(oTokens, printNumberToken, NULL);
          printf("\n");
 
          printf("Words:  ");
          DynArray_map(oTokens, printWordToken, NULL);
+         printf("\n");
+         */
+         DynArray_map(oTokens, printAnyToken, NULL);
          printf("\n");
       }
       printf("------------------------------------\n");
