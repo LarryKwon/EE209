@@ -1,18 +1,4 @@
-/*--------------------------------------------------------------------*/
-/* dfa.c                                                              */
-/* Original Author: Bob Dondero                                       */
-/* Illustrate lexical analysis using a deterministic finite state     */
-/* automaton (DFA)                                                    */
-/*--------------------------------------------------------------------*/
-
-#include "dynarray.h"
-#include "token.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
+#include "lexical.h"
 /*--------------------------------------------------------------------*/
 enum
 {
@@ -230,12 +216,13 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
    }
 }
 
-/*--------------------------------------------------------------------*/
+/*--------------------------------------------------------------------
+
 
 int main(void)
 
-/* Read a line from stdin, and write to stdout each number and word
-   that it contains.  Repeat until EOF.  Return 0 iff successful. */
+   // Read a line from stdin, and write to stdout each number and word
+   // that it contains.  Repeat until EOF.  Return 0 iff successful. 
 
 {
    char acLine[MAX_LINE_SIZE];
@@ -255,15 +242,13 @@ int main(void)
       iSuccessful = lexLine(acLine, oTokens);
       if (iSuccessful)
       {
-         /*
-         printf("Numbers:  ");
-         DynArray_map(oTokens, printNumberToken, NULL);
-         printf("\n");
+         // printf("Numbers:  ");
+         // DynArray_map(oTokens, printNumberToken, NULL);
+         // printf("\n");
 
-         printf("Words:  ");
-         DynArray_map(oTokens, printWordToken, NULL);
-         printf("\n");
-         */
+         // printf("Words:  ");
+         // DynArray_map(oTokens, printWordToken, NULL);
+         // printf("\n");
          DynArray_map(oTokens, printAnyToken, NULL);
          printf("\n");
       }
@@ -275,3 +260,4 @@ int main(void)
 
    return 0;
 }
+*/

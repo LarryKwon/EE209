@@ -5,11 +5,15 @@
 /*--------------------------------------------------------------------*/
 
 #include "dynarray.h"
-#include <assert.h>
-#include <stdlib.h>
 
-enum { MIN_PHYS_LENGTH = 2 };
-enum { GROWTH_FACTOR = 2 };
+enum
+{
+	MIN_PHYS_LENGTH = 2
+};
+enum
+{
+	GROWTH_FACTOR = 2
+};
 
 /*--------------------------------------------------------------------*/
 /* A DynArray consists of an array, along with its logical and
@@ -19,11 +23,11 @@ struct DynArray
 	/* The number of elements in the DynArray from the client's
 	   point of view. */
 	int iLength;
-	
+
 	/* The number of elements in the array that underlies the
 	   DynArray. */
 	int iPhysLength;
-	
+
 	/* The array that underlies the DynArray. */
 	const void **ppvArray;
 };
@@ -33,10 +37,14 @@ struct DynArray
 #ifndef NDEBUG
 static int DynArray_isValid(DynArray_T oDynArray)
 {
-	if (oDynArray->iLength < 0) return 0;
-	if (oDynArray->iPhysLength < MIN_PHYS_LENGTH) return 0;
-	if (oDynArray->iLength > oDynArray->iPhysLength) return 0;
-	if (oDynArray->ppvArray == NULL) return 0;
+	if (oDynArray->iLength < 0)
+		return 0;
+	if (oDynArray->iPhysLength < MIN_PHYS_LENGTH)
+		return 0;
+	if (oDynArray->iLength > oDynArray->iPhysLength)
+		return 0;
+	if (oDynArray->ppvArray == NULL)
+		return 0;
 	return 1;
 }
 #endif
@@ -46,27 +54,28 @@ static int DynArray_isValid(DynArray_T oDynArray)
 DynArray_T DynArray_new(int iLength)
 {
 	DynArray_T oDynArray;
-	
+
 	assert(iLength >= 0);
-	
-	oDynArray = (struct DynArray*)malloc(sizeof(struct DynArray));
+
+	oDynArray = (struct DynArray *)malloc(sizeof(struct DynArray));
 	if (oDynArray == NULL)
 		return NULL;
-	
+
 	oDynArray->iLength = iLength;
 	if (iLength > MIN_PHYS_LENGTH)
 		oDynArray->iPhysLength = iLength;
 	else
 		oDynArray->iPhysLength = MIN_PHYS_LENGTH;
-	
+
 	oDynArray->ppvArray =
-		(const void**)calloc((size_t)oDynArray->iPhysLength,
-							 sizeof(void*));
-	if (oDynArray->ppvArray == NULL) {
+		(const void **)calloc((size_t)oDynArray->iPhysLength,
+							  sizeof(void *));
+	if (oDynArray->ppvArray == NULL)
+	{
 		free(oDynArray);
 		return NULL;
 	}
-	
+
 	return oDynArray;
 }
 /*--------------------------------------------------------------------*/
@@ -75,7 +84,7 @@ void DynArray_free(DynArray_T oDynArray)
 {
 	assert(oDynArray != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	free(oDynArray->ppvArray);
 	free(oDynArray);
 }
@@ -85,7 +94,7 @@ int DynArray_getLength(DynArray_T oDynArray)
 {
 	assert(oDynArray != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	return oDynArray->iLength;
 }
 /*--------------------------------------------------------------------*/
@@ -96,8 +105,8 @@ void *DynArray_get(DynArray_T oDynArray, int iIndex)
 	assert(iIndex >= 0);
 	assert(iIndex < oDynArray->iLength);
 	assert(DynArray_isValid(oDynArray));
-	
-	return (void*)(oDynArray->ppvArray)[iIndex];
+
+	return (void *)(oDynArray->ppvArray)[iIndex];
 }
 /*--------------------------------------------------------------------*/
 /* Assign pvElement to the iIndex'th element of oDynArray.  Return the
@@ -106,18 +115,18 @@ void *DynArray_set(DynArray_T oDynArray, int iIndex,
 				   const void *pvElement)
 {
 	const void *pvOldElement;
-	
+
 	assert(oDynArray != NULL);
 	assert(iIndex >= 0);
 	assert(iIndex < oDynArray->iLength);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	pvOldElement = oDynArray->ppvArray[iIndex];
 	oDynArray->ppvArray[iIndex] = pvElement;
-	
+
 	assert(DynArray_isValid(oDynArray));
-	
-	return (void*)pvOldElement;
+
+	return (void *)pvOldElement;
 }
 /*--------------------------------------------------------------------*/
 /* Increase the physical length of oDynArray.  Return 1 (TRUE) if
@@ -126,16 +135,16 @@ static int DynArray_grow(DynArray_T oDynArray)
 {
 	int iNewLength;
 	const void **ppvNewArray;
-	
+
 	assert(oDynArray != NULL);
-	
+
 	iNewLength = oDynArray->iPhysLength * GROWTH_FACTOR;
-	
-	ppvNewArray = (const void**)
-		realloc(oDynArray->ppvArray, sizeof(void*) * iNewLength);
+
+	ppvNewArray = (const void **)
+		realloc(oDynArray->ppvArray, sizeof(void *) * iNewLength);
 	if (ppvNewArray == NULL)
 		return 0;
-	
+
 	oDynArray->iPhysLength = iNewLength;
 	oDynArray->ppvArray = ppvNewArray;
 
@@ -149,16 +158,16 @@ int DynArray_add(DynArray_T oDynArray, const void *pvElement)
 {
 	assert(oDynArray != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	if (oDynArray->iLength == oDynArray->iPhysLength)
 		if (!DynArray_grow(oDynArray))
 			return 0;
-	
+
 	oDynArray->ppvArray[oDynArray->iLength] = pvElement;
 	oDynArray->iLength++;
-	
+
 	assert(DynArray_isValid(oDynArray));
-	
+
 	return 1;
 }
 /*--------------------------------------------------------------------*/
@@ -169,24 +178,24 @@ int DynArray_addAt(DynArray_T oDynArray, int iIndex,
 				   const void *pvElement)
 {
 	int i;
-	
+
 	assert(oDynArray != NULL);
 	assert(iIndex >= 0);
 	assert(iIndex <= oDynArray->iLength);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	if (oDynArray->iLength == oDynArray->iPhysLength)
 		if (!DynArray_grow(oDynArray))
 			return 0;
-	
+
 	for (i = oDynArray->iLength; i > iIndex; i--)
-		oDynArray->ppvArray[i] = oDynArray->ppvArray[i-1];
-	
+		oDynArray->ppvArray[i] = oDynArray->ppvArray[i - 1];
+
 	oDynArray->ppvArray[iIndex] = pvElement;
 	oDynArray->iLength++;
-	
+
 	assert(DynArray_isValid(oDynArray));
-	
+
 	return 1;
 }
 /*--------------------------------------------------------------------*/
@@ -195,22 +204,22 @@ void *DynArray_removeAt(DynArray_T oDynArray, int iIndex)
 {
 	const void *pvOldElement;
 	int i;
-	
+
 	assert(oDynArray != NULL);
 	assert(iIndex >= 0);
 	assert(iIndex < oDynArray->iLength);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	pvOldElement = oDynArray->ppvArray[iIndex];
-	
+
 	oDynArray->iLength--;
-	
+
 	for (i = iIndex; i < oDynArray->iLength; i++)
-		oDynArray->ppvArray[i] = oDynArray->ppvArray[i+1];
-	
+		oDynArray->ppvArray[i] = oDynArray->ppvArray[i + 1];
+
 	assert(DynArray_isValid(oDynArray));
-	
-	return (void*)pvOldElement;
+
+	return (void *)pvOldElement;
 }
 /*--------------------------------------------------------------------*/
 /* Fill ppvArray with the elements of oDynArray.  ppvArray should point
@@ -219,13 +228,13 @@ void *DynArray_removeAt(DynArray_T oDynArray, int iIndex)
 void DynArray_toArray(DynArray_T oDynArray, void **ppvArray)
 {
 	int i;
-	
+
 	assert(oDynArray != NULL);
 	assert(ppvArray != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	for (i = 0; i < oDynArray->iLength; i++)
-		ppvArray[i] = (void*)oDynArray->ppvArray[i];
+		ppvArray[i] = (void *)oDynArray->ppvArray[i];
 }
 /*--------------------------------------------------------------------*/
 /* Apply function *pfApply to each element of oDynArray, passing
@@ -236,13 +245,13 @@ void DynArray_map(DynArray_T oDynArray,
 				  const void *pvExtra)
 {
 	int i;
-	
+
 	assert(oDynArray != NULL);
 	assert(pfApply != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	for (i = 0; i < oDynArray->iLength; i++)
-		(*pfApply)((void*)oDynArray->ppvArray[i], (void*)pvExtra);
+		(*pfApply)((void *)oDynArray->ppvArray[i], (void *)pvExtra);
 }
 /*--------------------------------------------------------------------*/
 /* Swap ppvArray[iOne] and ppvArray[iTwo]. */
@@ -266,8 +275,9 @@ static int DynArray_partition(const void *ppvArray[],
 {
 	int iFirst = iLeft - 1;
 	int iLast = iRight;
-	
-	while (1) {
+
+	while (1)
+	{
 		while ((*pfCompare)(ppvArray[++iFirst], ppvArray[iRight]) < 0)
 			;
 		while ((*pfCompare)(ppvArray[iRight], ppvArray[--iLast]) < 0)
@@ -291,7 +301,8 @@ static void DynArray_quicksort(const void *ppvArray[],
 							   int (*pfCompare)(const void *pvElement1, const void *pvElement2))
 {
 	int iMid;
-	if (iRight > iLeft) {
+	if (iRight > iLeft)
+	{
 		iMid = DynArray_partition(ppvArray, iLeft, iRight, pfCompare);
 		DynArray_quicksort(ppvArray, iLeft, iMid - 1, pfCompare);
 		DynArray_quicksort(ppvArray, iMid + 1, iRight, pfCompare);
@@ -308,10 +319,10 @@ void DynArray_sort(DynArray_T oDynArray,
 	assert(oDynArray != NULL);
 	assert(pfCompare != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
-	DynArray_quicksort(oDynArray->ppvArray, 0, oDynArray->iLength-1,
+
+	DynArray_quicksort(oDynArray->ppvArray, 0, oDynArray->iLength - 1,
 					   pfCompare);
-	
+
 	assert(DynArray_isValid(oDynArray));
 }
 /*--------------------------------------------------------------------*/
@@ -324,11 +335,11 @@ int DynArray_search(DynArray_T oDynArray, void *pvSoughtElement,
 					int (*pfCompare)(const void *pvElement1, const void *pvElement2))
 {
 	int i;
-	
+
 	assert(oDynArray != NULL);
 	assert(pfCompare != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	for (i = 0; i < oDynArray->iLength; i++)
 		if ((*pfCompare)(oDynArray->ppvArray[i], pvSoughtElement) == 0)
 			return i;
@@ -344,21 +355,22 @@ int DynArray_search(DynArray_T oDynArray, void *pvSoughtElement,
    respectively.  oDynArray should be sorted as determined by
    *pfCompare. */
 int DynArray_bsearch(DynArray_T oDynArray, void *pvSoughtElement,
-   int (*pfCompare)(const void *pvElement1, const void *pvElement2))
+					 int (*pfCompare)(const void *pvElement1, const void *pvElement2))
 {
 	int iLeft;
 	int iRight;
 	int iMid;
 	int iCompare;
-	
+
 	assert(oDynArray != NULL);
 	assert(pfCompare != NULL);
 	assert(DynArray_isValid(oDynArray));
-	
+
 	iLeft = 0;
 	iRight = oDynArray->iLength - 1;
-	
-	while (iLeft <= iRight) {
+
+	while (iLeft <= iRight)
+	{
 		iMid = (iLeft + iRight) / 2;
 		iCompare =
 			(*pfCompare)(pvSoughtElement, oDynArray->ppvArray[iMid]);
@@ -369,6 +381,6 @@ int DynArray_bsearch(DynArray_T oDynArray, void *pvSoughtElement,
 		else
 			iLeft = iMid + 1;
 	}
-	
+
 	return -1;
 }

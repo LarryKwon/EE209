@@ -1,6 +1,9 @@
 #ifndef TOKEN_INCLUDED
 #define TOKEN_INCLUDED
-
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 enum TokenType
 {
     TOKEN_NUMBER,
