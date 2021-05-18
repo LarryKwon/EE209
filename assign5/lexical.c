@@ -42,9 +42,9 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
    enum LexState
    {
       STATE_START,
-      STATE_IN_NUMBER,
       STATE_IN_WORD,
-      STATE_IN_STR
+      STATE_IN_STR,
+      STATE_IN_OUTPUT
    };
 
    enum LexState eState = STATE_START;
@@ -66,78 +66,33 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
       switch (eState)
       {
       case STATE_START:
-         if ((c == '\n') || (c == '\0'))
-            return TRUE;
-         else if (c == '\"')
-         {
-            eState = STATE_IN_STR;
-         }
-         else if (isdigit(c))
-         {
-            acValue[iValueIndex++] = c;
-            eState = STATE_IN_NUMBER;
-         }
-         else if (isalpha(c))
-         {
-            acValue[iValueIndex++] = c;
-            eState = STATE_IN_WORD;
-         }
-         else if (isspace(c))
-            eState = STATE_START;
-         else
-         {
-            fprintf(stderr, "Invalid line\n");
-            return FALSE;
-         }
-         break;
-
-      case STATE_IN_NUMBER:
          if (isspace(c))
          {
-            /* Create a NUMBER token. */
-            acValue[iValueIndex] = '\0';
-            psToken = makeToken(TOKEN_NUMBER, acValue);
-            if (psToken == NULL)
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            if (!DynArray_add(oTokens, psToken))
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            iValueIndex = 0;
-            if ((c == '\n') || (c == '\0'))
+            else if ((c == '\n') || (c == '\0'))
             {
                return TRUE;
             }
-            else
-            {
-               eState = STATE_START;
-            }
-         }
-         else if (c == '\"')
-         {
-            eState = STATE_IN_STR;
-         }
-         else if (isdigit(c))
-         {
-            acValue[iValueIndex++] = c;
-            eState = STATE_IN_NUMBER;
-         }
-         else if (isalpha(c))
-         {
-            acValue[iValueIndex++] = c;
-            eState = STATE_IN_WORD;
+            eState = STATE_START;
          }
          else
          {
-            fprintf(stderr, "Invalid line\n");
-            return FALSE;
+            if (c == '\"')
+            {
+               eState = STATE_IN_STR;
+            }
+            else if ((c == '<') || (c == '>') || (c == '|'))
+            {
+               /* Create a Output token */
+               acValue[iValueIndex++] = c;
+               eState = STATE_IN_OUTPUT;
+            }
+            else
+            {
+               acValue[iValueIndex++] = c;
+               eState = STATE_IN_WORD;
+            }
          }
          break;
-
       case STATE_IN_WORD:
          if (isspace(c))
          {
@@ -165,32 +120,37 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
                eState = STATE_START;
             }
          }
-         else if (c == '\"')
-         {
-            acValue[iValueIndex] = '\0';
-            psToken = makeToken(TOKEN_WORD, acValue);
-            if (psToken == NULL)
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            if (!DynArray_add(oTokens, psToken))
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            iValueIndex = 0;
-            eState = STATE_IN_STR;
-         }
-         else if (isalpha(c) || isdigit(c))
-         {
-            acValue[iValueIndex++] = c;
-            eState = STATE_IN_WORD;
-         }
          else
          {
-            fprintf(stderr, "Invalid line\n");
-            return FALSE;
+            if (c == '\"')
+            {
+               eState = STATE_IN_STR;
+            }
+            else if ((c == '<') || (c == '>') || (c == '|'))
+            {
+               /* Create a Word token */
+               acValue[iValueIndex] = '\0';
+               psToken = makeToken(TOKEN_WORD, acValue);
+               if (psToken == NULL)
+               {
+                  fprintf(stderr, "Cannot allocate memory\n");
+                  return FALSE;
+               }
+               if (!DynArray_add(oTokens, psToken))
+               {
+                  fprintf(stderr, "Cannot allocate memory\n");
+                  return FALSE;
+               }
+               iValueIndex = 0;
+
+               acValue[iValueIndex++] = c;
+               eState = STATE_IN_OUTPUT;
+            }
+            else
+            {
+               acValue[iValueIndex++] = c;
+               eState = STATE_IN_WORD;
+            }
          }
          break;
 
@@ -199,7 +159,7 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
          {
             /* Create a String token */
             acValue[iValueIndex] = '\0';
-            psToken = makeToken(TOKEN_STRING, acValue);
+            psToken = makeToken(TOKEN_WORD, acValue);
             if (psToken == NULL)
             {
                fprintf(stderr, "Cannot allocate memory\n");
@@ -225,6 +185,44 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
             eState = STATE_IN_STR;
          }
          break;
+
+      case STATE_IN_OUTPUT:
+
+         /* Create a Output token */
+         acValue[iValueIndex] = '\0';
+         psToken = makeToken(TOKEN_OUTPUT, acValue);
+         if (psToken == NULL)
+         {
+            fprintf(stderr, "Cannot allocate memory\n");
+            return FALSE;
+         }
+         if (!DynArray_add(oTokens, psToken))
+         {
+            fprintf(stderr, "Cannot allocate memory\n");
+            return FALSE;
+         }
+         iValueIndex = 0;
+
+         if (isspace(c))
+         {
+            if ((c == '\n') || (c == '\0'))
+            {
+               return TRUE;
+            }
+            estate = STATE_START;
+         }
+         else
+         {
+            if (c == '\"')
+            {
+               eState = STATE_IN_STR;
+            }
+            else
+            {
+               acValue[iValueIndex++] = c;
+               eState = STATE_IN_WORD;
+            }
+         }
 
       default:
          assert(FALSE);
