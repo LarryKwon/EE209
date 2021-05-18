@@ -1,4 +1,9 @@
 #include "lexical.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 /*--------------------------------------------------------------------*/
 enum
 {
@@ -13,7 +18,7 @@ enum
 
 /*--------------------------------------------------------------------*/
 
-static int lexLine(const char *pcLine, DynArray_T oTokens)
+int lexLine(const char *pcLine, DynArray_T oTokens)
 
 /* Lexically analyze string pcLine.  Populate oTokens with the
    tokens that pcLine contains.  Return 1 (TRUE) if successful, or

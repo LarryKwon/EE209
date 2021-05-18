@@ -1,4 +1,9 @@
 #include "syntatic.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 enum
 {
     MAX_LINE_SIZE = 1024
@@ -17,17 +22,19 @@ int main(void)
     int isSuccessful;
     int valid;
 
-    DynArray_T oTokens = DynArray_new(0);
-    if (oTokens == NULL)
-    {
-        fprintf(stderr, "Cannot allocate memory\n");
-        exit(EXIT_FAILURE);
-    }
+    DynArray_T oTokens;
 
     DynArray_T commandTokens = DynArray_new(0);
 
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
+        oTokens = DynArray_new(0);
+        if (oTokens == NULL)
+        {
+            fprintf(stderr, "Cannot allocate memory\n");
+            exit(EXIT_FAILURE);
+        }
+
         isSuccessful = lexLine(acLine, oTokens);
         if (isSuccessful)
         {

@@ -7,8 +7,6 @@
 #ifndef DYNARRAY_INCLUDED
 #define DYNARRAY_INCLUDED
 
-#include <assert.h>
-#include <stdlib.h>
 /* A DynArray_T is an array whose length can expand dynamically. */
 typedef struct DynArray *DynArray_T;
 

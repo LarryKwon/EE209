@@ -5,7 +5,8 @@
 /*--------------------------------------------------------------------*/
 
 #include "dynarray.h"
-
+#include <assert.h>
+#include <stdlib.h>
 enum
 {
 	MIN_PHYS_LENGTH = 2
