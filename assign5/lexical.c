@@ -68,7 +68,7 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
       case STATE_START:
          if (isspace(c))
          {
-            else if ((c == '\n') || (c == '\0'))
+            if ((c == '\n') || (c == '\0'))
             {
                return TRUE;
             }
@@ -157,7 +157,7 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
       case STATE_IN_STR:
          if (c == '\"')
          {
-            /* Create a String token */
+            /* Create a String token 
             acValue[iValueIndex] = '\0';
             psToken = makeToken(TOKEN_WORD, acValue);
             if (psToken == NULL)
@@ -171,8 +171,8 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
                return FALSE;
             }
             iValueIndex = 0;
-
-            eState = STATE_START;
+            */
+            eState = STATE_IN_WORD;
          }
          else if ((c == '\n') || (c == '\0'))
          {
@@ -209,7 +209,7 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
             {
                return TRUE;
             }
-            estate = STATE_START;
+            eState = STATE_START;
          }
          else
          {
@@ -223,7 +223,7 @@ static int lexLine(const char *pcLine, DynArray_T oTokens)
                eState = STATE_IN_WORD;
             }
          }
-
+         break;
       default:
          assert(FALSE);
       }
