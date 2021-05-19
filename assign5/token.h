@@ -8,6 +8,16 @@ enum TokenType
     TOKEN_OUTPUT
 };
 
+enum CommandType
+{
+    COMMAND,
+    ARGUMENT,
+    STDIN,
+    STDOUT,
+    PIPE,
+    FILENAME
+}
+
 /* A Token is either a number or a word, expressed as a string. */
 /* The type of the token. */
 /* The string which is the token's value. */
@@ -21,10 +31,6 @@ Token_T makeToken(enum TokenType eTokenType, char *pcValue);
 /* Print token pvItem to stdout iff it is a word.  pvExtra is
    unused. */
 void printWordToken(void *pvItem, void *pvExtra);
-
-/* Print token pvItem to stdout iff it is a number.  pvExtra is
-   unused. */
-void printNumberToken(void *pvItem, void *pvExtra);
 
 /*print token pvItem to stdout iff it is a string. pvExtra is 
     unused. */

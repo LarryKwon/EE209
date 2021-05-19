@@ -15,6 +15,8 @@ struct Token
 
    char *pcValue;
    /* The string which is the token's value. */
+
+   enum CommandType cType;
 };
 
 /*--------------------------------------------------------------------*/
@@ -24,15 +26,6 @@ void freeToken(void *pvItem, void *pvExtra)
    struct Token *psToken = (struct Token *)pvItem;
    free(psToken->pcValue);
    free(psToken);
-}
-
-/*--------------------------------------------------------------------*/
-
-void printNumberToken(void *pvItem, void *pvExtra)
-{
-   struct Token *psToken = (struct Token *)pvItem;
-   if (psToken->eType == TOKEN_NUMBER)
-      printf("%s ", psToken->pcValue);
 }
 
 /*--------------------------------------------------------------------*/
