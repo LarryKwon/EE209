@@ -28,7 +28,29 @@ void fillCommandtype(DynArray_T oTokens)
         switch (commandIndex)
         {
         case 0:
-            psToken->cType = COMMAND;
+            if (psToken->eType == TOKEN_WORD)
+            {
+                psToken->cType = COMMAND;
+            }
+            else if (psToken->eType == TOKEN_OUTPUT)
+            {
+                if (strcmp(psToken->pcValue, "|") == 0)
+                {
+                    psToken->cType == PIPE;
+                }
+                else if (strcmp(psToken->pcValue, "<") == 0)
+                {
+                    psToken->cType == STDIN;
+                }
+                else if (strcmp(psToken->pcValue, ">") == 0)
+                {
+                    psToken->cType == STDOUT;
+                }
+                else
+                {
+                    fprintf(stderr, "error may be in lexical analysis");
+                }
+            }
             break;
 
         default:
