@@ -28,206 +28,333 @@ enum commandState
     STATE_IN_FILE
 };
 
-struct Result
+enum ioState
+{
+    NONE,
+    INPUT_STREAM,
+    OUTPUT_STREAM,
+    PIPE_STREAM
+};
+
+struct ioResult
+{
+    enum ioState ioState;
+    int error;
+    const char *errormsg;
+};
+
+struct commandResult
 {
     enum commandState cState;
     int error;
-    char *errormsg;
+    const char *errormsg;
 };
 
-struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, enum commandState cState)
+struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, enum commandState cState)
 {
     struct Token *token = DynArray_get(oTokens, iIndex);
-    struct Result *result = (strcut Result *)malloc(sizeof(struct Result));
+    struct commandResult *commandresult = (struct commandResult *)malloc(sizeof(struct commandResult));
+    enum TokenType tokenType = token->eType;
     switch (cState)
     {
     case STATE_START:
-        if (token->eType == TOKEN_WORD)
+        if (tokenType == TOKEN_WORD)
         {
-            result->error = 0;
-            result->errormsg = NULL;
-            result->cState = STATE_IN_COMMAND;
+            commandresult->error = 0;
+            commandresult->errormsg = NULL;
+            commandresult->cState = STATE_IN_COMMAND;
             token->cType = COMMAND;
         }
 
         else
         {
-            result->error = 1;
-            result->errormsg = "invalid: missing command name\n";
+            commandresult->error = 1;
+            commandresult->errormsg = "invalid: missing command name\n";
         }
         break;
 
     case STATE_IN_COMMAND:
-        enum TokenType tokenType = token->eType;
-        result->error = 0;
-        result->errormsg = NULL;
+        commandresult->error = 0;
+        commandresult->errormsg = NULL;
         if (tokenType == TOKEN_WORD)
         {
-            result->cState = STATE_IN_ARGUMENT;
+            commandresult->cState = STATE_IN_ARGUMENT;
             token->cType = ARGUMENT;
         }
         else if (tokenType == TOKEN_STDIN)
         {
-            result->cState = STATE_IN_STDIN;
+            commandresult->cState = STATE_IN_STDIN;
             token->cType = STDIN;
         }
         else if (tokenType == TOKEN_STDOUT)
         {
-            result->cState = STATE_IN_STDOUT;
+            commandresult->cState = STATE_IN_STDOUT;
             token->cType = STDOUT;
         }
         else if (tokenType == TOKEN_PIPE)
         {
-            result->cState = STATE_IN_PIPE;
+            commandresult->cState = STATE_IN_PIPE;
             token->cType = PIPE;
         }
         else
         {
-            fprintf(stderr, "should not reach here");
+            fprintf(stderr, "should not reach here\n");
         }
         break;
 
     case STATE_IN_ARGUMENT:
-        enum TokenType tokenType = token->eType;
-        result->error = 0;
-        result->errormsg = NULL;
+        commandresult->error = 0;
+        commandresult->errormsg = NULL;
         if (tokenType == TOKEN_WORD)
         {
-            result->cState = STATE_IN_ARGUMENT;
+            commandresult->cState = STATE_IN_ARGUMENT;
             token->cType = ARGUMENT;
         }
         else if (tokenType == TOKEN_STDIN)
         {
-            result->cState = STATE_IN_STDIN;
+            commandresult->cState = STATE_IN_STDIN;
             token->cType = STDIN;
         }
         else if (tokenType == TOKEN_STDOUT)
         {
-            result->cState = STATE_IN_STDOUT;
+            commandresult->cState = STATE_IN_STDOUT;
             token->cType = STDOUT;
         }
         else if (tokenType == TOKEN_PIPE)
         {
-            result->cState = STATE_IN_PIPE;
+            commandresult->cState = STATE_IN_PIPE;
             token->cType = PIPE;
         }
         else
         {
-            fprintf(stderr, "should not reach here");
+            fprintf(stderr, "should not reach here\n");
         }
         break;
 
     case STATE_IN_STDIN:
-        enum TokenType tokenType = token->eType;
         if (iIndex == (arrayLength - 1))
         {
-            result->cState = cState;
-            result->error = 1;
-            result->errormsg = "Invalid: Standard input redirection without input file name\n";
+            commandresult->cState = cState;
+            commandresult->error = 1;
+            commandresult->errormsg = "Invalid: Standard input redirection without input file name\n";
             token->cType = STDIN;
         }
         else
         {
-            if (tokenType == Token_WORD)
+            if (tokenType == TOKEN_WORD)
             {
-                result->cState = STATE_IN_FILE;
-                result->error = 0;
-                result->errormsg = NULL;
+                commandresult->cState = STATE_IN_FILE;
+                commandresult->error = 0;
+                commandresult->errormsg = NULL;
                 token->cType = FILENAME;
             }
             else
             {
-                result->cState = cState;
-                result->error = 1;
-                result->errormsg = "Invalid: Standard input redirection without input file name\n"
+                commandresult->cState = cState;
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard input redirection without input file name\n";
             }
         }
         break;
 
     case STATE_IN_STDOUT:
-        enum TokenType tokenType = token->eType;
         if (iIndex == (arrayLength - 1))
         {
-            result->cState = cState;
-            result->error = 1;
-            result->errormsg = "Invalid: Standard input redirection without output file name\n";
+            commandresult->cState = cState;
+            commandresult->error = 1;
+            commandresult->errormsg = "Invalid: Standard input redirection without output file name\n";
         }
         else
         {
-            if (tokenType == Token_WORD)
+            if (tokenType == TOKEN_WORD)
             {
-                result->cState = STATE_IN_FILE;
-                result->error = 0;
-                result->errormsg = NULL;
+                commandresult->cState = STATE_IN_FILE;
+                commandresult->error = 0;
+                commandresult->errormsg = NULL;
                 token->cType = FILENAME;
             }
             else
             {
-                result->cState = cState;
-                result->error = 1;
-                result->errormsg = "Invalid: Standard input redirection without output file name\n"
+                commandresult->cState = cState;
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard input redirection without output file name\n";
             }
         }
         break;
 
     case STATE_IN_PIPE:
-        enum TokenType tokenType = token->eType;
         if (iIndex == (arrayLength - 1))
         {
-            result->cState = cState;
-            result->error = 1;
-            result->errormsg = "Invalid: No Command after pipe operation\n";
+            commandresult->cState = cState;
+            commandresult->error = 1;
+            commandresult->errormsg = "Invalid: No Command after pipe operation\n";
         }
         else
         {
-            if (tokenType == Token_WORD)
+            if (tokenType == TOKEN_WORD)
             {
-                result->cState = STATE_IN_COMMAND;
-                result->error = 0;
-                result->errormsg = NULL;
+                commandresult->cState = STATE_IN_COMMAND;
+                commandresult->error = 0;
+                commandresult->errormsg = NULL;
                 token->cType = COMMAND;
             }
             else
             {
-                result->cState = cState;
-                result->error = 1;
-                result->errormsg = "Invalid: No Command after pipe operation\n"
+                commandresult->cState = cState;
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: No Command after pipe operation\n";
             }
         }
         break;
 
     case STATE_IN_FILE:
-        enum TokenType tokenType = token->eType;
-        result->error = 0;
-        result->errormsg = NULL;
+        commandresult->error = 0;
+        commandresult->errormsg = NULL;
         if (tokenType == TOKEN_STDIN)
         {
-            result->cState = STATE_IN_STDIN;
+            commandresult->cState = STATE_IN_STDIN;
             token->cType = STDIN;
         }
         else if (tokenType == TOKEN_STDOUT)
         {
-            result->cState = STATE_IN_STDOUT;
+            commandresult->cState = STATE_IN_STDOUT;
             token->cType = STDOUT;
         }
         else if (tokenType == TOKEN_PIPE)
         {
-            result->cState = STATE_IN_PIPE;
+            commandresult->cState = STATE_IN_PIPE;
             token->cType = PIPE;
         }
         else if (tokenType == TOKEN_WORD)
         {
-            result->cState = STATE_IN_ARGUMENT;
+            commandresult->cState = STATE_IN_ARGUMENT;
             token->cType = ARGUMENT;
         }
         else
         {
-            fprintf(stderr, "should not reach here");
+            fprintf(stderr, "should not reach here\n");
         }
         break;
     }
 
-    return result;
+    return commandresult;
+}
+
+struct ioResult *ioContext(DynArray_T oTokens, int iIndex, int arrayLength, enum ioState ioState)
+{
+    struct Token *token = DynArray_get(oTokens, iIndex);
+    struct ioResult *ioResult = (struct ioResult *)malloc(sizeof(struct ioResult));
+    enum TokenType tokenType = token->eType;
+    switch (ioState)
+    {
+    case NONE:
+        ioResult->error = 0;
+        ioResult->errormsg = NULL;
+        if (tokenType == TOKEN_STDIN)
+        {
+            ioResult->ioState = INPUT_STREAM;
+        }
+        else if (tokenType == TOKEN_STDOUT)
+        {
+            ioResult->ioState = OUTPUT_STREAM;
+        }
+        else if (tokenType == TOKEN_PIPE)
+        {
+            ioResult->ioState = PIPE_STREAM;
+        }
+        else if (tokenType == TOKEN_WORD)
+        {
+            ioResult->ioState = NONE;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here\n");
+        }
+        break;
+
+    case INPUT_STREAM:
+        if (tokenType == TOKEN_STDIN)
+        {
+            ioResult->error = 1;
+            ioResult->errormsg = "Invalid: Multiple redirection of standard input";
+        }
+        else if (tokenType == TOKEN_STDOUT)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = OUTPUT_STREAM;
+        }
+        else if (tokenType == TOKEN_PIPE)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = PIPE_STREAM;
+        }
+        else if (tokenType == TOKEN_WORD)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = INPUT_STREAM;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here\n");
+        }
+        break;
+
+    case OUTPUT_STREAM:
+        if (tokenType == TOKEN_STDIN)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = INPUT_STREAM;
+        }
+        else if (tokenType == TOKEN_STDOUT)
+        {
+            ioResult->error = 1;
+            ioResult->errormsg = "Invalid: Multiple redirection of standard output\n";
+        }
+        else if (tokenType == TOKEN_PIPE)
+        {
+            ioResult->error = 1;
+            ioResult->errormsg = "Invalid: Multiple redirection of standard output\n";
+        }
+        else if (tokenType == TOKEN_WORD)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = OUTPUT_STREAM;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here\n");
+        }
+        break;
+    case PIPE_STREAM:
+        if (tokenType == TOKEN_STDIN)
+        {
+            ioResult->error = 1;
+            ioResult->errormsg = "Invalid: Multiple redirection of standard input\n";
+        }
+        else if (tokenType == TOKEN_STDOUT)
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = OUTPUT_STREAM;
+        }
+        else if ((tokenType == TOKEN_PIPE) || (tokenType == TOKEN_WORD))
+        {
+            ioResult->error = 0;
+            ioResult->errormsg = NULL;
+            ioResult->ioState = PIPE_STREAM;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here\n");
+        }
+        break;
+    }
+    return ioResult;
 }
 
 int syntaticLine(DynArray_T oTokens)
@@ -235,15 +362,16 @@ int syntaticLine(DynArray_T oTokens)
     int iIndex;
     int tokenArrayLength = DynArray_getLength(oTokens);
     enum commandState cState = STATE_START;
-    for (iIndex = 0; iIndex < tokenArrayLength; i++)
+    for (iIndex = 0; iIndex < tokenArrayLength; iIndex++)
     {
-        struct Result *result = commandContext(oTokens, iIndex, tokenArrayLength, cState);
-        cState = result->cState;
-        if (result->error)
+        struct commandResult *commandresult = commandContext(oTokens, iIndex, tokenArrayLength, cState);
+        cState = commandresult->cState;
+        if (commandresult->error)
         {
-            fprintf(stderr, result->errormsg);
+            fprintf(stderr, commandresult->errormsg);
             return FALSE;
         }
+        free(commandresult);
     }
     return TRUE;
 }
