@@ -18,6 +18,29 @@ enum
 
 /*--------------------------------------------------------------------*/
 
+static enum TokenType ioTokenType(char c)
+{
+   if (!((c == '<') || (c == '>') || (c == '|')))
+   {
+      fprintf(stderr, "wrong parameter\n");
+   }
+
+   if (c == '<')
+   {
+      return TOKEN_STDIN;
+   }
+   else if (c == '>')
+   {
+      return TOKEN_STDOUT;
+   }
+   else if (c == '|')
+   {
+      return TOKEN_PIPE;
+   }
+}
+
+/*--------------------------------------------------------------------*/
+
 int lexLine(const char *pcLine, DynArray_T oTokens)
 
 /* Lexically analyze string pcLine.  Populate oTokens with the
@@ -53,6 +76,7 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
    {
       /* "Read" the next character from pcLine. */
       c = pcLine[iLineIndex++];
+      enum TokenType tokenType;
 
       switch (eState)
       {
@@ -75,6 +99,7 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
             {
                /* Create a Output token */
                acValue[iValueIndex++] = c;
+               tokenType = ioTokenType(c);
                eState = STATE_IN_OUTPUT;
             }
             else
@@ -89,7 +114,8 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
          {
             /* Create a WORD token. */
             acValue[iValueIndex] = '\0';
-            psToken = makeToken(TOKEN_WORD, acValue);
+            tokenType = TOKEN_WORD;
+            psToken = makeToken(tokenType, acValue);
             if (psToken == NULL)
             {
                fprintf(stderr, "Cannot allocate memory\n");
@@ -121,7 +147,8 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
             {
                /* Create a Word token */
                acValue[iValueIndex] = '\0';
-               psToken = makeToken(TOKEN_WORD, acValue);
+               tokenType = TOKEN_WORD;
+               psToken = makeToken(tokenType, acValue);
                if (psToken == NULL)
                {
                   fprintf(stderr, "Cannot allocate memory\n");
@@ -135,6 +162,7 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
                iValueIndex = 0;
 
                acValue[iValueIndex++] = c;
+               tokenType = ioTokenType(c);
                eState = STATE_IN_OUTPUT;
             }
             else
@@ -148,21 +176,6 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
       case STATE_IN_STR:
          if (c == '\"')
          {
-            /* Create a String token 
-            acValue[iValueIndex] = '\0';
-            psToken = makeToken(TOKEN_WORD, acValue);
-            if (psToken == NULL)
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            if (!DynArray_add(oTokens, psToken))
-            {
-               fprintf(stderr, "Cannot allocate memory\n");
-               return FALSE;
-            }
-            iValueIndex = 0;
-            */
             eState = STATE_IN_WORD;
          }
          else if ((c == '\n') || (c == '\0'))
@@ -181,7 +194,8 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
 
          /* Create a Output token */
          acValue[iValueIndex] = '\0';
-         psToken = makeToken(TOKEN_OUTPUT, acValue);
+
+         psToken = makeToken(tokenType, acValue);
          if (psToken == NULL)
          {
             fprintf(stderr, "Cannot allocate memory\n");
@@ -221,13 +235,12 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
    }
 }
 
-/*--------------------------------------------------------------------
-
+/*--------------------------------------------------------------------*/
 
 int main(void)
 
-   // Read a line from stdin, and write to stdout each number and word
-   // that it contains.  Repeat until EOF.  Return 0 iff successful. 
+// Read a line from stdin, and write to stdout each number and word
+// that it contains.  Repeat until EOF.  Return 0 iff successful.
 
 {
    char acLine[MAX_LINE_SIZE];
@@ -265,4 +278,3 @@ int main(void)
 
    return 0;
 }
-*/

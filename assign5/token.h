@@ -2,10 +2,10 @@
 #define TOKEN_INCLUDED
 enum TokenType
 {
-    TOKEN_NUMBER,
     TOKEN_WORD,
-    TOKEN_STRING,
-    TOKEN_OUTPUT
+    TOKEN_STDIN,
+    TOKEN_STDOUT,
+    TOKEN_PIPE
 };
 
 enum CommandType
@@ -16,7 +16,7 @@ enum CommandType
     STDOUT,
     PIPE,
     FILENAME
-}
+};
 
 /* A Token is either a number or a word, expressed as a string. */
 /* The type of the token. */

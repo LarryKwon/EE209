@@ -38,15 +38,6 @@ void printWordToken(void *pvItem, void *pvExtra)
 }
 
 /*--------------------------------------------------------------------*/
-
-void printStringToken(void *pvItem, void *pvExtra)
-{
-   struct Token *psToken = (struct Token *)pvItem;
-   if (psToken->eType == TOKEN_STRING)
-      printf("%s ", psToken->pcValue);
-}
-
-/*--------------------------------------------------------------------*/
 void printAnyToken(void *pvItem, void *pvExtra)
 {
    struct Token *psToken = (struct Token *)pvItem;

@@ -17,84 +17,116 @@ enum
     TRUE
 };
 
-void fillCommandtype(DynArray_T oTokens)
+enum commandState
 {
-    int lineLength = DynArray_getLength(oTokens);
-    int commandIndex = 0;
-    struct Token *psToken;
-    for (int i = 0; i < lineLength; i++)
+    STATE_START,
+    STATE_IN_COMMAND,
+    STATE_IN_ARGUMENT,
+    STATE_IN_STDIN,
+    STATE_IN_STDOUT,
+    STATE_IN_PIPE,
+    STATE_IN_FILE
+};
+
+struct Result
+{
+    enum commandState cState;
+    int error;
+    char *errormsg;
+};
+
+struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, enum commandState cState)
+{
+    struct Token *token = DynArray_get(oTokens, iIndex);
+    struct Result *result = (strcut Result *)malloc(sizeof(struct Result));
+    switch (cState)
     {
-        psToken = (struct Token *)DynArray_get(oTokens, i);
-        switch (commandIndex)
+    case STATE_START:
+        if (token->eType == TOKEN_WORD)
         {
-        case 0:
-            if (psToken->eType == TOKEN_WORD)
-            {
-                psToken->cType = COMMAND;
-            }
-            else if (psToken->eType == TOKEN_OUTPUT)
-            {
-                if (strcmp(psToken->pcValue, "|") == 0)
-                {
-                    psToken->cType == PIPE;
-                }
-                else if (strcmp(psToken->pcValue, "<") == 0)
-                {
-                    psToken->cType == STDIN;
-                }
-                else if (strcmp(psToken->pcValue, ">") == 0)
-                {
-                    psToken->cType == STDOUT;
-                }
-                else
-                {
-                    fprintf(stderr, "error may be in lexical analysis");
-                }
-            }
-            break;
-
-        default:
-            if (pcToken->eType == TOKEN_OUTPUT)
-            {
-                if (strcmp(psToken->pcValue, "|") == 0)
-                {
-                    psToken->cType == PIPE;
-                }
-                else if (strcmp(psToken->pcValue, "<") == 0)
-                {
-                    psToken->cType == STDIN;
-                }
-                else if (strcmp(psToken->pcValue, ">") == 0)
-                {
-                    psToken->cType == STDOUT;
-                }
-                else
-                {
-                    fprintf(stderr, "error may be in lexical analysis");
-                }
-                commandIndex = 0;
-            }
-            else
-            {
-                psToken->cType = ARGUMENT;
-            }
-            break;
+            result->error = 0;
+            result->errormsg = NULL;
+            result->cState = STATE_IN_COMMAND;
+            token->cType = COMMAND;
         }
+
+        else
+        {
+            result->error = 1;
+            result->errormsg = "invalid: missing command name\n";
+        }
+        break;
+
+    case STATE_IN_COMMAND:
+        result->error = 0;
+        result->errormsg = NULL;
+        if (token->eType == TOKEN_WORD)
+        {
+            result->cState = STATE_IN_ARGUMENT;
+            token->cType = ARGUMENT;
+        }
+        else if (token->eType == TOKEN_STDIN)
+        {
+            result->cState = STATE_IN_STDIN;
+            token->cType = STDIN;
+        }
+        else if (token->eType == TOKEN_STDOUT)
+        {
+            result->cState = STATE_IN_STDOUT;
+            token->cType = STDOUT;
+        }
+        else if (token->eType == TOKEN_PIPE)
+        {
+            result->cState = STATE_IN_PIPE;
+            token->cType = PIPE;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here");
+        }
+        break;
+
+    case STATE_IN_ARGUMENT:
+        result->error = 0;
+        result->errormsg = NULL;
+        if (token->eType == TOKEN_WORD)
+        {
+            result->cState = STATE_IN_ARGUMENT;
+            token->cType = ARGUMENT;
+        }
+        else if (token->eType == TOKEN_STDIN)
+        {
+            result->cState = STATE_IN_STDIN;
+            token->cType = STDIN;
+        }
+        else if (token->eType == TOKEN_STDOUT)
+        {
+            result->cState = STATE_IN_STDOUT;
+            token->cType = STDOUT;
+        }
+        else if (token->eType == TOKEN_PIPE)
+        {
+            result->cState = STATE_IN_PIPE;
+            token->cType = PIPE;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here");
+        }
+        break;
+
+    case STATE_IN_STDIN:
+
+        break;
+    case STATE_IN_STDOUT:
+        break;
+    case STATE_IN_PIPE:
+        break;
+    case STATE_IN_FILE:
+        break;
     }
-}
 
-int validCheck(DynArray_T oTokens)
-{
-
-    enum SynState
-    {
-        STATE_COMMANd,
-        STATE_ARGUMENT,
-        STATE_FILE,
-    };
-    int lineLength = DynArray_getLength(oTokens);
-    int commandIndex = 0;
-    struct Token *psToken;
+    return result;
 }
 
 int syntaticLine(DynArray_T oTokens)
