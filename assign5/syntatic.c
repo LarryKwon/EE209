@@ -377,7 +377,7 @@ int syntaticLine(DynArray_T oTokens)
         struct commandResult *commandresult = commandContext(oTokens, iIndex, tokenArrayLength, cState);
         if (commandresult->error)
         {
-            fprintf(stderr, commandresult->errormsg);
+            fprintf(stderr, "%s", commandresult->errormsg);
             return FALSE;
         }
         else
@@ -389,7 +389,7 @@ int syntaticLine(DynArray_T oTokens)
         struct ioResult *ioresult = ioContext(oTokens, iIndex, tokenArrayLength, ioState);
         if (ioresult->error)
         {
-            fprintf(stderr, ioresult->errormsg);
+            fprintf(stderr, "%s", ioresult->errormsg);
             return FALSE;
         }
         else
@@ -410,7 +410,7 @@ int main(void)
     DynArray_T oTokens;
 
     DynArray_T commandTokens = DynArray_new(0);
-
+    printf("------------------------------------\n");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
         oTokens = DynArray_new(0);
@@ -425,8 +425,13 @@ int main(void)
         {
             isSuccessful = syntaticLine(oTokens);
         }
+        if (isSuccessful)
+        {
+            DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        }
+        printf("------------------------------------\n");
+        DynArray_map(oTokens, freeToken, NULL);
+        DynArray_free(oTokens);
     }
-    DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
-    DynArray_map(oTokens, freeToken, NULL);
-    DynArray_free(oTokens);
+    return 0;
 }

@@ -8,7 +8,7 @@
       "name": "(gdb) 시작",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/assign5/lexical",
+      "program": "${workspaceFolder}/assign5/syntatic",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
