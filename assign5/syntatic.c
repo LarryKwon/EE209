@@ -58,24 +58,25 @@ struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, e
         break;
 
     case STATE_IN_COMMAND:
+        enum TokenType tokenType = token->eType;
         result->error = 0;
         result->errormsg = NULL;
-        if (token->eType == TOKEN_WORD)
+        if (tokenType == TOKEN_WORD)
         {
             result->cState = STATE_IN_ARGUMENT;
             token->cType = ARGUMENT;
         }
-        else if (token->eType == TOKEN_STDIN)
+        else if (tokenType == TOKEN_STDIN)
         {
             result->cState = STATE_IN_STDIN;
             token->cType = STDIN;
         }
-        else if (token->eType == TOKEN_STDOUT)
+        else if (tokenType == TOKEN_STDOUT)
         {
             result->cState = STATE_IN_STDOUT;
             token->cType = STDOUT;
         }
-        else if (token->eType == TOKEN_PIPE)
+        else if (tokenType == TOKEN_PIPE)
         {
             result->cState = STATE_IN_PIPE;
             token->cType = PIPE;
@@ -87,24 +88,25 @@ struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, e
         break;
 
     case STATE_IN_ARGUMENT:
+        enum TokenType tokenType = token->eType;
         result->error = 0;
         result->errormsg = NULL;
-        if (token->eType == TOKEN_WORD)
+        if (tokenType == TOKEN_WORD)
         {
             result->cState = STATE_IN_ARGUMENT;
             token->cType = ARGUMENT;
         }
-        else if (token->eType == TOKEN_STDIN)
+        else if (tokenType == TOKEN_STDIN)
         {
             result->cState = STATE_IN_STDIN;
             token->cType = STDIN;
         }
-        else if (token->eType == TOKEN_STDOUT)
+        else if (tokenType == TOKEN_STDOUT)
         {
             result->cState = STATE_IN_STDOUT;
             token->cType = STDOUT;
         }
-        else if (token->eType == TOKEN_PIPE)
+        else if (tokenType == TOKEN_PIPE)
         {
             result->cState = STATE_IN_PIPE;
             token->cType = PIPE;
@@ -116,13 +118,112 @@ struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, e
         break;
 
     case STATE_IN_STDIN:
+        enum TokenType tokenType = token->eType;
+        if (iIndex == (arrayLength - 1))
+        {
+            result->cState = cState;
+            result->error = 1;
+            result->errormsg = "Invalid: Standard input redirection without input file name\n";
+            token->cType = STDIN;
+        }
+        else
+        {
+            if (tokenType == Token_WORD)
+            {
+                result->cState = STATE_IN_FILE;
+                result->error = 0;
+                result->errormsg = NULL;
+                token->cType = FILENAME;
+            }
+            else
+            {
+                result->cState = cState;
+                result->error = 1;
+                result->errormsg = "Invalid: Standard input redirection without input file name\n"
+            }
+        }
+        break;
 
-        break;
     case STATE_IN_STDOUT:
+        enum TokenType tokenType = token->eType;
+        if (iIndex == (arrayLength - 1))
+        {
+            result->cState = cState;
+            result->error = 1;
+            result->errormsg = "Invalid: Standard input redirection without output file name\n";
+        }
+        else
+        {
+            if (tokenType == Token_WORD)
+            {
+                result->cState = STATE_IN_FILE;
+                result->error = 0;
+                result->errormsg = NULL;
+                token->cType = FILENAME;
+            }
+            else
+            {
+                result->cState = cState;
+                result->error = 1;
+                result->errormsg = "Invalid: Standard input redirection without output file name\n"
+            }
+        }
         break;
+
     case STATE_IN_PIPE:
+        enum TokenType tokenType = token->eType;
+        if (iIndex == (arrayLength - 1))
+        {
+            result->cState = cState;
+            result->error = 1;
+            result->errormsg = "Invalid: No Command after pipe operation\n";
+        }
+        else
+        {
+            if (tokenType == Token_WORD)
+            {
+                result->cState = STATE_IN_COMMAND;
+                result->error = 0;
+                result->errormsg = NULL;
+                token->cType = COMMAND;
+            }
+            else
+            {
+                result->cState = cState;
+                result->error = 1;
+                result->errormsg = "Invalid: No Command after pipe operation\n"
+            }
+        }
         break;
+
     case STATE_IN_FILE:
+        enum TokenType tokenType = token->eType;
+        result->error = 0;
+        result->errormsg = NULL;
+        if (tokenType == TOKEN_STDIN)
+        {
+            result->cState = STATE_IN_STDIN;
+            token->cType = STDIN;
+        }
+        else if (tokenType == TOKEN_STDOUT)
+        {
+            result->cState = STATE_IN_STDOUT;
+            token->cType = STDOUT;
+        }
+        else if (tokenType == TOKEN_PIPE)
+        {
+            result->cState = STATE_IN_PIPE;
+            token->cType = PIPE;
+        }
+        else if (tokenType == TOKEN_WORD)
+        {
+            result->cState = STATE_IN_ARGUMENT;
+            token->cType = ARGUMENT;
+        }
+        else
+        {
+            fprintf(stderr, "should not reach here");
+        }
         break;
     }
 
@@ -131,7 +232,20 @@ struct Result *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, e
 
 int syntaticLine(DynArray_T oTokens)
 {
-    fillCommandtype(oTokens);
+    int iIndex;
+    int tokenArrayLength = DynArray_getLength(oTokens);
+    enum commandState cState = STATE_START;
+    for (iIndex = 0; iIndex < tokenArrayLength; i++)
+    {
+        struct Result *result = commandContext(oTokens, iIndex, tokenArrayLength, cState);
+        cState = result->cState;
+        if (result->error)
+        {
+            fprintf(stderr, result->errormsg);
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 int main(void)
@@ -157,9 +271,10 @@ int main(void)
         isSuccessful = lexLine(acLine, oTokens);
         if (isSuccessful)
         {
-            syntaticLine(oTokens);
+            isSuccessful = syntaticLine(oTokens);
         }
     }
+    DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
     DynArray_map(oTokens, freeToken, NULL);
     DynArray_free(oTokens);
 }

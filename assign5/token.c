@@ -38,10 +38,19 @@ void printWordToken(void *pvItem, void *pvExtra)
 }
 
 /*--------------------------------------------------------------------*/
-void printAnyToken(void *pvItem, void *pvExtra)
+
+void printAnyTokenWithTokenType(void *pvItem, void *pvExtra)
 {
    struct Token *psToken = (struct Token *)pvItem;
    printf("%d : %s \n", psToken->eType, psToken->pcValue);
+}
+
+/*--------------------------------------------------------------------*/
+
+void printAnyTokenWithCommandType(void *pvItem, void *pvExtra)
+{
+   struct Token *psToken = (struct Token *)pvItem;
+   printf("%d : %s \n", psToken->cType, psToken->pcValue);
 }
 
 /*--------------------------------------------------------------------*/

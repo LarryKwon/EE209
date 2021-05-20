@@ -36,9 +36,15 @@ void printWordToken(void *pvItem, void *pvExtra);
     unused. */
 void printStringToken(void *pvItem, void *pvExtra);
 
-/*print token pvItem to stdout which token type is any kind of thing 
+/*print token pvItem to stdout which token type is any kind of thing
+with tokenType 
 pvExtra is unused. */
-void printAnyToken(void *pvItem, void *pvExtra);
+void printAnyTokenWithTokenType(void *pvItem, void *pvExtra);
+
+/*print token pvItem to stdout which token type is any kind of thing
+with commandType 
+pvExtra is unused. */
+void printAnyTokenWithCommandType(void *pvItem, void *pvExtra);
 
 /* Free token pvItem.  pvExtra is unused. */
 void freeToken(void *pvItem, void *pvExtra);
