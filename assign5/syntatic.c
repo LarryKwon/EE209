@@ -59,6 +59,18 @@ struct commandResult
 //    enum CommandType cType;
 // };
 
+static int isLastToken(int iIndex, int arrayLength)
+{
+    if (iIndex == (arrayLength - 1))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
 struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, enum commandState cState)
 {
     struct Token *token = (struct Token *)DynArray_get(oTokens, iIndex);
@@ -74,7 +86,6 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
             commandresult->cState = STATE_IN_COMMAND;
             setCommandType(token, COMMAND);
         }
-
         else
         {
             commandresult->error = 1;
@@ -92,18 +103,42 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         }
         else if (tokenType == TOKEN_STDIN)
         {
-            commandresult->cState = STATE_IN_STDIN;
-            setCommandType(token, STDIN);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard input redirection without file name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_STDIN;
+                setCommandType(token, STDIN);
+            }
         }
         else if (tokenType == TOKEN_STDOUT)
         {
-            commandresult->cState = STATE_IN_STDOUT;
-            setCommandType(token, STDOUT);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard output redirection without file name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_STDOUT;
+                setCommandType(token, STDOUT);
+            }
         }
         else if (tokenType == TOKEN_PIPE)
         {
-            commandresult->cState = STATE_IN_PIPE;
-            setCommandType(token, PIPE);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Missing command name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_PIPE;
+                setCommandType(token, PIPE);
+            }
         }
         else
         {
@@ -121,18 +156,42 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         }
         else if (tokenType == TOKEN_STDIN)
         {
-            commandresult->cState = STATE_IN_STDIN;
-            setCommandType(token, STDIN);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard input redirection without file name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_STDIN;
+                setCommandType(token, STDIN);
+            }
         }
         else if (tokenType == TOKEN_STDOUT)
         {
-            commandresult->cState = STATE_IN_STDOUT;
-            setCommandType(token, STDOUT);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Standard output redirection without file name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_STDOUT;
+                setCommandType(token, STDOUT);
+            }
         }
         else if (tokenType == TOKEN_PIPE)
         {
-            commandresult->cState = STATE_IN_PIPE;
-            setCommandType(token, PIPE);
+            if (isLastToken(iIndex, arrayLength))
+            {
+                commandresult->error = 1;
+                commandresult->errormsg = "Invalid: Missing command name\n";
+            }
+            else
+            {
+                commandresult->cState = STATE_IN_PIPE;
+                setCommandType(token, PIPE);
+            }
         }
         else
         {
@@ -141,78 +200,50 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         break;
 
     case STATE_IN_STDIN:
-        if (iIndex == (arrayLength - 1))
+        if (tokenType == TOKEN_WORD)
+        {
+            commandresult->cState = STATE_IN_FILE;
+            commandresult->error = 0;
+            commandresult->errormsg = NULL;
+            setCommandType(token, FILENAME);
+        }
+        else
         {
             commandresult->cState = cState;
             commandresult->error = 1;
             commandresult->errormsg = "Invalid: Standard input redirection without input file name\n";
-            setCommandType(token, STDIN);
-        }
-        else
-        {
-            if (tokenType == TOKEN_WORD)
-            {
-                commandresult->cState = STATE_IN_FILE;
-                commandresult->error = 0;
-                commandresult->errormsg = NULL;
-                setCommandType(token, FILENAME);
-            }
-            else
-            {
-                commandresult->cState = cState;
-                commandresult->error = 1;
-                commandresult->errormsg = "Invalid: Standard input redirection without input file name\n";
-            }
         }
         break;
 
     case STATE_IN_STDOUT:
-        if (iIndex == (arrayLength - 1))
+        if (tokenType == TOKEN_WORD)
+        {
+            commandresult->cState = STATE_IN_FILE;
+            commandresult->error = 0;
+            commandresult->errormsg = NULL;
+            setCommandType(token, FILENAME);
+        }
+        else
         {
             commandresult->cState = cState;
             commandresult->error = 1;
             commandresult->errormsg = "Invalid: Standard input redirection without output file name\n";
         }
-        else
-        {
-            if (tokenType == TOKEN_WORD)
-            {
-                commandresult->cState = STATE_IN_FILE;
-                commandresult->error = 0;
-                commandresult->errormsg = NULL;
-                setCommandType(token, FILENAME);
-            }
-            else
-            {
-                commandresult->cState = cState;
-                commandresult->error = 1;
-                commandresult->errormsg = "Invalid: Standard input redirection without output file name\n";
-            }
-        }
         break;
 
     case STATE_IN_PIPE:
-        if (iIndex == (arrayLength - 1))
+        if (tokenType == TOKEN_WORD)
+        {
+            commandresult->cState = STATE_IN_COMMAND;
+            commandresult->error = 0;
+            commandresult->errormsg = NULL;
+            setCommandType(token, COMMAND);
+        }
+        else
         {
             commandresult->cState = cState;
             commandresult->error = 1;
             commandresult->errormsg = "Invalid: No Command after pipe operation\n";
-        }
-        else
-        {
-            if (tokenType == TOKEN_WORD)
-            {
-                commandresult->cState = STATE_IN_COMMAND;
-                commandresult->error = 0;
-                commandresult->errormsg = NULL;
-                setCommandType(token, COMMAND);
-            }
-            else
-            {
-                commandresult->cState = cState;
-                commandresult->error = 1;
-                commandresult->errormsg = "Invalid: No Command after pipe operation\n";
-            }
         }
         break;
 
@@ -285,7 +316,7 @@ struct ioResult *ioContext(DynArray_T oTokens, int iIndex, int arrayLength, enum
         if (tokenType == TOKEN_STDIN)
         {
             ioResult->error = 1;
-            ioResult->errormsg = "Invalid: Multiple redirection of standard input";
+            ioResult->errormsg = "Invalid: Multiple redirection of standard input\n";
         }
         else if (tokenType == TOKEN_STDOUT)
         {
@@ -424,10 +455,16 @@ int main(void)
         if (isSuccessful)
         {
             isSuccessful = syntaticLine(oTokens);
+            DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
         }
         if (isSuccessful)
         {
+            printf("%s\n", "valid");
             DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        }
+        else
+        {
+            printf("%s\n", "invalid");
         }
         printf("------------------------------------\n");
         DynArray_map(oTokens, freeToken, NULL);
