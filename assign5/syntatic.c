@@ -1,6 +1,4 @@
 #include "syntatic.h"
-#include "token.h"
-#include "dynarray.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,11 +48,22 @@ struct commandResult
     const char *errormsg;
 };
 
+// struct Token
+// {
+//    enum TokenType eType;
+//    /* The type of the token. */
+
+//    char *pcValue;
+//    /* The string which is the token's value. */
+
+//    enum CommandType cType;
+// };
+
 struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLength, enum commandState cState)
 {
-    struct Token *token = DynArray_get(oTokens, iIndex);
+    struct Token *token = (struct Token *)DynArray_get(oTokens, iIndex);
     struct commandResult *commandresult = (struct commandResult *)malloc(sizeof(struct commandResult));
-    enum TokenType tokenType = token->eType;
+    enum TokenType tokenType = getTokenType(token);
     switch (cState)
     {
     case STATE_START:
@@ -63,7 +72,7 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
             commandresult->error = 0;
             commandresult->errormsg = NULL;
             commandresult->cState = STATE_IN_COMMAND;
-            token->cType = COMMAND;
+            setCommandType(token, COMMAND);
         }
 
         else
@@ -79,22 +88,22 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         if (tokenType == TOKEN_WORD)
         {
             commandresult->cState = STATE_IN_ARGUMENT;
-            token->cType = ARGUMENT;
+            setCommandType(token, ARGUMENT);
         }
         else if (tokenType == TOKEN_STDIN)
         {
             commandresult->cState = STATE_IN_STDIN;
-            token->cType = STDIN;
+            setCommandType(token, STDIN);
         }
         else if (tokenType == TOKEN_STDOUT)
         {
             commandresult->cState = STATE_IN_STDOUT;
-            token->cType = STDOUT;
+            setCommandType(token, STDOUT);
         }
         else if (tokenType == TOKEN_PIPE)
         {
             commandresult->cState = STATE_IN_PIPE;
-            token->cType = PIPE;
+            setCommandType(token, PIPE);
         }
         else
         {
@@ -108,22 +117,22 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         if (tokenType == TOKEN_WORD)
         {
             commandresult->cState = STATE_IN_ARGUMENT;
-            token->cType = ARGUMENT;
+            setCommandType(token, ARGUMENT);
         }
         else if (tokenType == TOKEN_STDIN)
         {
             commandresult->cState = STATE_IN_STDIN;
-            token->cType = STDIN;
+            setCommandType(token, STDIN);
         }
         else if (tokenType == TOKEN_STDOUT)
         {
             commandresult->cState = STATE_IN_STDOUT;
-            token->cType = STDOUT;
+            setCommandType(token, STDOUT);
         }
         else if (tokenType == TOKEN_PIPE)
         {
             commandresult->cState = STATE_IN_PIPE;
-            token->cType = PIPE;
+            setCommandType(token, PIPE);
         }
         else
         {
@@ -137,7 +146,7 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
             commandresult->cState = cState;
             commandresult->error = 1;
             commandresult->errormsg = "Invalid: Standard input redirection without input file name\n";
-            token->cType = STDIN;
+            setCommandType(token, STDIN);
         }
         else
         {
@@ -146,7 +155,7 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
                 commandresult->cState = STATE_IN_FILE;
                 commandresult->error = 0;
                 commandresult->errormsg = NULL;
-                token->cType = FILENAME;
+                setCommandType(token, FILENAME);
             }
             else
             {
@@ -171,7 +180,7 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
                 commandresult->cState = STATE_IN_FILE;
                 commandresult->error = 0;
                 commandresult->errormsg = NULL;
-                token->cType = FILENAME;
+                setCommandType(token, FILENAME);
             }
             else
             {
@@ -196,7 +205,7 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
                 commandresult->cState = STATE_IN_COMMAND;
                 commandresult->error = 0;
                 commandresult->errormsg = NULL;
-                token->cType = COMMAND;
+                setCommandType(token, COMMAND);
             }
             else
             {
@@ -213,22 +222,22 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
         if (tokenType == TOKEN_STDIN)
         {
             commandresult->cState = STATE_IN_STDIN;
-            token->cType = STDIN;
+            setCommandType(token, STDIN);
         }
         else if (tokenType == TOKEN_STDOUT)
         {
             commandresult->cState = STATE_IN_STDOUT;
-            token->cType = STDOUT;
+            setCommandType(token, STDOUT);
         }
         else if (tokenType == TOKEN_PIPE)
         {
             commandresult->cState = STATE_IN_PIPE;
-            token->cType = PIPE;
+            setCommandType(token, PIPE);
         }
         else if (tokenType == TOKEN_WORD)
         {
             commandresult->cState = STATE_IN_ARGUMENT;
-            token->cType = ARGUMENT;
+            setCommandType(token, ARGUMENT);
         }
         else
         {
@@ -244,7 +253,7 @@ struct ioResult *ioContext(DynArray_T oTokens, int iIndex, int arrayLength, enum
 {
     struct Token *token = DynArray_get(oTokens, iIndex);
     struct ioResult *ioResult = (struct ioResult *)malloc(sizeof(struct ioResult));
-    enum TokenType tokenType = token->eType;
+    enum TokenType tokenType = getTokenType(token);
     switch (ioState)
     {
     case NONE:
@@ -362,16 +371,31 @@ int syntaticLine(DynArray_T oTokens)
     int iIndex;
     int tokenArrayLength = DynArray_getLength(oTokens);
     enum commandState cState = STATE_START;
+    enum ioState ioState = NONE;
     for (iIndex = 0; iIndex < tokenArrayLength; iIndex++)
     {
         struct commandResult *commandresult = commandContext(oTokens, iIndex, tokenArrayLength, cState);
-        cState = commandresult->cState;
         if (commandresult->error)
         {
             fprintf(stderr, commandresult->errormsg);
             return FALSE;
         }
+        else
+        {
+            cState = commandresult->cState;
+        }
         free(commandresult);
+
+        struct ioResult *ioresult = ioContext(oTokens, iIndex, tokenArrayLength, ioState);
+        if (ioresult->error)
+        {
+            fprintf(stderr, ioresult->errormsg);
+            return FALSE;
+        }
+        else
+        {
+            ioState = ioresult->ioState;
+        }
     }
     return TRUE;
 }

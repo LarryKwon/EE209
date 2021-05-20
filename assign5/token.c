@@ -77,3 +77,22 @@ struct Token *makeToken(enum TokenType eTokenType,
 
    return psToken;
 }
+
+/*--------------------------------------------------------------------*/
+enum TokenType getTokenType(Token_T token)
+{
+   enum TokenType tokenType = token->eType;
+   return tokenType;
+}
+
+/*--------------------------------------------------------------------*/
+enum CommandType getCommandType(Token_T token)
+{
+   enum CommandType cType = token->cType;
+   return cType;
+}
+/*--------------------------------------------------------------------*/
+void setCommandType(Token_T token, enum CommandType commandType)
+{
+   token->cType = commandType;
+}

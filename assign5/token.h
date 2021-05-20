@@ -28,6 +28,15 @@ typedef struct Token *Token_T;
    memory is available.  The caller owns the Token. */
 Token_T makeToken(enum TokenType eTokenType, char *pcValue);
 
+/* get TokenType in the Token */
+enum TokenType getTokenType(Token_T token);
+
+/* set CommandType in the token */
+void setCommandType(Token_T token, enum CommandType commandType);
+
+/*get CommandType in the token*/
+enum CommandType getCommandType(Token_T token);
+
 /* Print token pvItem to stdout iff it is a word.  pvExtra is
    unused. */
 void printWordToken(void *pvItem, void *pvExtra);
