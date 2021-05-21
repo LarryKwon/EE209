@@ -427,10 +427,12 @@ int syntaticLine(DynArray_T oTokens)
         {
             ioState = ioresult->ioState;
         }
+        free(ioresult);
     }
     return TRUE;
 }
 
+/*
 int main(void)
 {
 
@@ -440,7 +442,6 @@ int main(void)
 
     DynArray_T oTokens;
 
-    DynArray_T commandTokens = DynArray_new(0);
     printf("------------------------------------\n");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
@@ -472,3 +473,4 @@ int main(void)
     }
     return 0;
 }
+*/

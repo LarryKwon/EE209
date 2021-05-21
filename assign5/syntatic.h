@@ -5,4 +5,6 @@
 #include "token.h"
 #include "dynarray.h"
 
+int syntaticLine(DynArray_T oTokens);
+
 #endif
