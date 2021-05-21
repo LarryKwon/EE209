@@ -91,6 +91,11 @@ enum CommandType getCommandType(Token_T token)
    enum CommandType cType = token->cType;
    return cType;
 }
+
+char* getTokenValue(Token_T token){
+   return strdup(token->pcValue);
+}
+
 /*--------------------------------------------------------------------*/
 void setCommandType(Token_T token, enum CommandType commandType)
 {
