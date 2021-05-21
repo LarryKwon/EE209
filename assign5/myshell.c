@@ -10,7 +10,8 @@ enum
     MAX_LINE_SIZE = 1024
 };
 
-enum BuiltInCommand{
+enum BuiltInCommand
+{
     CD,
     SETENV,
     UNSETENV,
@@ -18,7 +19,7 @@ enum BuiltInCommand{
     NOTHING
 };
 
-typedef int (*BuiltIn_T) (DynArray_T );
+typedef int (*BuiltIn_T)(DynArray_T);
 
 static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
 {
@@ -50,63 +51,88 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     return oTokens;
 }
 
-enum BuiltInCommand isBuiltIn(DynArray_T otokens){
+int execCd(DynArray_T oTokens)
+{
+}
+
+int execSetenv(DynArray_T oTokens)
+{
+}
+
+int execUnsetenv(DynArray_T oTokens)
+{
+}
+
+int execExit(DynArray_T oTokens)
+{
+}
+
+enum BuiltInCommand
+isBuiltIn(DynArray_T otokens)
+{
     Token_T token = DynArray_get(oTokens, 0);
 
-    char * pcValue = getTokenValue(token);
-    if(pcValue == NULL){
-        fprintf(stderr,"Cannot allocate memory\n");
+    char *pcValue = getTokenValue(token);
+    if (pcValue == NULL)
+    {
+        fprintf(stderr, "Cannot allocate memory\n");
     }
-    if(strcmp(pcValue,"cd")==0){
+    if (strcmp(pcValue, "cd") == 0)
+    {
         free(pcValue);
         return CD;
     }
-    else if(strcmp(pcValue,"setenv")==0){
+    else if (strcmp(pcValue, "setenv") == 0)
+    {
         free(pcValue);
         return SETENV;
     }
-    else if(strcmp(pcValue,"unsetenv")==0){
+    else if (strcmp(pcValue, "unsetenv") == 0)
+    {
         free(pcValue);
         return UNSETENV;
     }
-    else if(strcmp(pcValue,"exit")==0){
+    else if (strcmp(pcValue, "exit") == 0)
+    {
         free(pcValue);
         return EXIT;
     }
-    else{
-       free(pcValue);
-       return NOTHING;
+    else
+    {
+        free(pcValue);
+        return NOTHING;
     }
 }
 
-BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand){
+BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand)
+{
 
     assert(builtInCommand != NOTHING);
 
-    switch(builtInCommand){
-        case CD:
-            return &ExecCd;
+    switch (builtInCommand)
+    {
+    case CD:
+        return &execCd;
         break;
 
-        case SETENV:
-            return &ExecSetenv;
+    case SETENV:
+        return &execSetenv;
         break;
 
-        case UNSETENV:
-            return &ExecUnSetenv;
+    case UNSETENV:
+        return &execUnsetenv;
         break;
 
-        case EXIT:
-            return &ExecExit;
+    case EXIT:
+        return &execExit;
         break;
 
-        case NOTHING:
-            return ?;
-        break;
+    case NOTHING:
+        fprintf(stderr, "should not reach here\n") break;
     }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     char acLine[MAX_LINE_SIZE];
 
@@ -118,10 +144,13 @@ int main(int argc, char* argv[])
 
         enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
 
-        if(builtInCommand != NOTHING){
+        if (builtInCommand != NOTHING)
+        {
             BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
+            (*builtInfunction)(oTokens);
         }
-        else{
+        else
+        {
             execute();
         }
         DynArray_map(oTokens, freeToken, NULL);
