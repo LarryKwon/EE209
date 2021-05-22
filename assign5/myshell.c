@@ -52,8 +52,8 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     if (lexical)
     {
         DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
-        syntatic = syntaticLine(oTokens);
         printf("%s\n", "-----------------------");
+        syntatic = syntaticLine(oTokens);
     }
     else
     {
@@ -130,8 +130,16 @@ int execSetenv(DynArray_T oTokens)
         else
         {
             char *firstParam = getTokenValue(DynArray_get(oTokens, 1));
-            char *secondParam = getTokenValue(DynArray_get(oTokens, 2));
-            int result = setenv(firstParam, secondParam, 1);
+            int result;
+            if (commandLine == 3)
+            {
+                char *secondParam = getTokenValue(DynArray_get(oTokens, 2));
+                result = setenv(firstParam, secondParam, 1);
+            }
+            else
+            {
+                result = setenv(firstParam, "", 1);
+            }
             if (result == -1)
             {
                 fprintf(stderr, "%s\n", strerror(errno));
@@ -244,15 +252,10 @@ BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand)
     }
 }
 
-char **constructCommands(DynArray_T Tokens, char **commands)
+void constructCommands(DynArray_T Tokens, char **commands)
 {
-
+    assert(commands);
     int length = DynArray_getLength(Tokens);
-    commands = malloc(length + 1);
-    if (commands == NULL)
-    {
-        return NULL;
-    }
 
     for (int i = 0; i < length; i++)
     {
@@ -260,14 +263,15 @@ char **constructCommands(DynArray_T Tokens, char **commands)
         commands[i] = strdup(value);
     }
     commands[length] = NULL;
-    return commands;
 }
 
 int execute(DynArray_T oTokens, char **argv)
 {
-    fflush(NULL);
     int status;
-    char **commands;
+    int length = DynArray_getLength(oTokens);
+    char **commands = malloc(length + 1);
+    constructCommands(oTokens, commands);
+    fflush(NULL);
     pid_t childId = fork();
     if (childId == -1)
     {
@@ -276,7 +280,6 @@ int execute(DynArray_T oTokens, char **argv)
     }
     if (childId == 0)
     {
-        commands = constructCommands(oTokens, commands);
         if (commands != NULL)
         {
             execvp(commands[0], commands);

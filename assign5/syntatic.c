@@ -75,6 +75,10 @@ struct commandResult *commandContext(DynArray_T oTokens, int iIndex, int arrayLe
 {
     struct Token *token = (struct Token *)DynArray_get(oTokens, iIndex);
     struct commandResult *commandresult = (struct commandResult *)malloc(sizeof(struct commandResult));
+    if (commandresult == NULL)
+    {
+        return NULL;
+    }
     enum TokenType tokenType = getTokenType(token);
     switch (cState)
     {
