@@ -266,10 +266,8 @@ int execute(DynArray_T oTokens, char **argv)
 {
     fflush(NULL);
     int status;
-    pid_t childId = fork();
-
     char **commands;
-
+    pid_t childId = fork();
     if (childId == -1)
     {
         perror(argv[0]);
