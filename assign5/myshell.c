@@ -52,8 +52,8 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     lexical = lexLine(acLine, oTokens);
     if (lexical)
     {
-        DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
-        printf("%s\n", "-----------------------");
+        //DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
+        //printf("%s\n", "-----------------------");
         syntatic = syntaticLine(oTokens);
     }
     else

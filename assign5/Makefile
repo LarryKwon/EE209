@@ -14,6 +14,6 @@ myshell: myshell.o lexical.o syntatic.o dynarray.o token.o
 	gcc -g -o $@ $? 
 token.o: token.h
 dynarray.o: dynarray.h
-lexical.o: dynarray.h token.h 
-syntatic.o: dynarray.h token.h lexical.h 
-myshell.o: dynarray.h token.h lexical.h syntatic.h
+lexical.o: lexical.h
+syntatic.o: syntatic.h
+myshell.o: lexical.h syntatic.h
