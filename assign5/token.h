@@ -32,7 +32,7 @@ Token_T makeToken(enum TokenType eTokenType, char *pcValue);
 enum TokenType getTokenType(Token_T token);
 
 /* get TokenValue in the Token */
-char* getTokenValue(Token_T token)
+char *getTokenValue(Token_T token);
 
 /* set CommandType in the token */
 void setCommandType(Token_T token, enum CommandType commandType);

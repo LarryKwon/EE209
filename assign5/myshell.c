@@ -1,11 +1,18 @@
 #include "lexical.h"
 #include "syntatic.h"
+#include "dynarray.h"
+#include "token.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
 enum
 {
     FALSE,
@@ -72,14 +79,14 @@ int execCd(DynArray_T oTokens)
         char *home = getenv("HOME");
         if (home == NULL)
         {
-            fprintf(stderr, "%s\n", strerr(errno));
+            fprintf(stderr, "%s\n", strerror(errno));
             return FALSE;
         }
         else
         {
             if (chdir(home) == -1)
             {
-                fprintf(stderr, "%s\n", strerr(errno));
+                fprintf(stderr, "%s\n", strerror(errno));
                 return FALSE;
             }
         }
@@ -100,7 +107,7 @@ int execCd(DynArray_T oTokens)
 int execSetenv(DynArray_T oTokens)
 {
     int commandLine = DynArray_getLength(oTokens);
-    enum Commandtype cType = getCommandType(DynArray_get(oTokens, 1));
+    enum CommandType cType = getCommandType(DynArray_get(oTokens, 1));
     if (commandLine > 3 || commandLine == 1)
     {
         fprintf(stderr, "setenv Takes one or two parameter");
@@ -139,7 +146,7 @@ int execUnsetenv(DynArray_T oTokens)
         int result = unsetenv(firstParam);
         if (result == -1)
         {
-            fprint(stderr, "%s\n", strerror(errno));
+            fprintf(stderr, "%s\n", strerror(errno));
             return FALSE;
         }
     }
@@ -162,7 +169,7 @@ int execExit(DynArray_T oTokens)
 }
 
 enum BuiltInCommand
-isBuiltIn(DynArray_T otokens)
+isBuiltIn(DynArray_T oTokens)
 {
     Token_T token = DynArray_get(oTokens, 0);
 
@@ -222,18 +229,22 @@ BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand)
         break;
 
     case NOTHING:
-        fprintf(stderr, "should not reach here\n") break;
+        fprintf(stderr, "should not reach here\n");
+        break;
     }
+}
+int execute()
+{
+    return TRUE;
 }
 
 int main(int argc, char *argv[])
 {
     char acLine[MAX_LINE_SIZE];
-
+    printf("%%");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
         DynArray_T oTokens;
-        printf("%%");
         oTokens = executionInit(oTokens, acLine);
 
         enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
@@ -241,12 +252,13 @@ int main(int argc, char *argv[])
         if (builtInCommand != NOTHING)
         {
             BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
-            (*builtInfunction)(oTokens);
+            (*builtInFunction)(oTokens);
         }
         else
         {
             execute();
         }
+        printf("%%");
         DynArray_map(oTokens, freeToken, NULL);
         DynArray_free(oTokens);
     }

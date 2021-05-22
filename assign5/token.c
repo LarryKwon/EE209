@@ -92,7 +92,9 @@ enum CommandType getCommandType(Token_T token)
    return cType;
 }
 
-char* getTokenValue(Token_T token){
+/*--------------------------------------------------------------------*/
+char *getTokenValue(Token_T token)
+{
    return strdup(token->pcValue);
 }
 
