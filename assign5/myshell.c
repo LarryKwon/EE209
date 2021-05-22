@@ -61,7 +61,7 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     if (syntatic)
     {
         //printf("%s\n", "valid");
-        //DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
     }
     else
     {
@@ -242,9 +242,55 @@ BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand)
         break;
     }
 }
-int execute()
+
+char **constructCommands(DynArray_T Tokens, char **commands)
 {
-    return TRUE;
+
+    int length = DynArray_getLength(Tokens);
+    commands = malloc(length + 1);
+    if (commands == NULL)
+    {
+        return NULL;
+    }
+
+    for (int i = 0; i < length; i++)
+    {
+        char *value = getTokenValue(DynArray_get(Tokens, i));
+        commands[i] = strdup(value);
+    }
+    commands[length] = NULL;
+    return commands;
+}
+
+int execute(DynArray_T oTokens, char **argv)
+{
+    fflush(NULL);
+    int status;
+    pid_t childId = fork();
+
+    char **commands;
+
+    if (childId == -1)
+    {
+        perror(argv[0]);
+        return EXIT_FAILURE;
+    }
+    if (childId == 0)
+    {
+        commands = constructCommands(oTokens, commands);
+        if (commands != NULL)
+        {
+            execvp(commands[0], commands);
+            perror(argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        childId = wait(&status);
+        free(commands);
+        return TRUE;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -258,27 +304,25 @@ int main(int argc, char *argv[])
 
         if (oTokens == NULL)
         {
-            printf("%% ");
-            continue;
-        }
-
-        enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
-
-        if (builtInCommand != NOTHING)
-        {
-            BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
-            int builtInResult = (*builtInFunction)(oTokens);
-            if (builtInResult == FALSE)
-            {
-                printf("%%");
-                continue;
-            }
         }
         else
         {
-            execute();
+            enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
+
+            if (builtInCommand != NOTHING)
+            {
+                BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
+                int builtInResult = (*builtInFunction)(oTokens);
+                if (builtInResult == FALSE)
+                {
+                }
+            }
+            else
+            {
+                execute(oTokens, argv);
+            }
         }
-        printf("%%");
+        printf("%% ");
         DynArray_map(oTokens, freeToken, NULL);
         DynArray_free(oTokens);
     }
