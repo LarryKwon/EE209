@@ -1,4 +1,8 @@
+#include "token.h"
+#include "dynarray.h"
+#include "lexical.h"
 #include "syntatic.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>

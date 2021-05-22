@@ -1,7 +1,8 @@
-#include "lexical.h"
-#include "syntatic.h"
+#define _DEFAULT_SOURCE
 #include "dynarray.h"
 #include "token.h"
+#include "lexical.h"
+#include "syntatic.h"
 
 #include <ctype.h>
 #include <stdio.h>
