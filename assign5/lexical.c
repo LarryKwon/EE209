@@ -1,7 +1,6 @@
 #include "dynarray.h"
 #include "token.h"
 #include "lexical.h"
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,6 +61,7 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
       STATE_IN_WORD,
       STATE_IN_STR,
       STATE_IN_OUTPUT
+
    };
 
    enum LexState eState = STATE_START;
@@ -127,6 +127,7 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
             if (!DynArray_add(oTokens, psToken))
             {
                fprintf(stderr, "Cannot allocate memory\n");
+
                return FALSE;
             }
             iValueIndex = 0;
