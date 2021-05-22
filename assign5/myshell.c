@@ -51,8 +51,9 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     lexical = lexLine(acLine, oTokens);
     if (lexical)
     {
+        DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
         syntatic = syntaticLine(oTokens);
-        // DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
+        printf("%s\n", "-----------------------");
     }
     else
     {
@@ -298,6 +299,7 @@ int main(int argc, char *argv[])
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
         DynArray_T oTokens;
+
         oTokens = executionInit(oTokens, acLine);
 
         if (oTokens == NULL)
