@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
+enum
+{
+    FALSE,
+    TRUE
+};
+
 enum
 {
     MAX_LINE_SIZE = 1024
@@ -53,18 +60,105 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
 
 int execCd(DynArray_T oTokens)
 {
+    int commandLine = DynArray_getLength(oTokens);
+
+    if (commandLine > 2)
+    {
+        fprintf(stderr, "cd Takes one parameter");
+        return FALSE;
+    }
+    else if (commandLine == 1)
+    {
+        char *home = getenv("HOME");
+        if (home == NULL)
+        {
+            fprintf(stderr, "%s\n", strerr(errno));
+            return FALSE;
+        }
+        else
+        {
+            if (chdir(home) == -1)
+            {
+                fprintf(stderr, "%s\n", strerr(errno));
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        Token_T arg = DynArray_get(oTokens, 1);
+        char *argValue = getTokenValue(arg);
+        if (chdir(argValue) == -1)
+        {
+            fprintf(stderr, "%s\n", strerror(errno));
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 int execSetenv(DynArray_T oTokens)
 {
+    int commandLine = DynArray_getLength(oTokens);
+    enum Commandtype cType = getCommandType(DynArray_get(oTokens, 1));
+    if (commandLine > 3 || commandLine == 1)
+    {
+        fprintf(stderr, "setenv Takes one or two parameter");
+        return FALSE;
+    }
+    else if (cType == STDIN || cType == STDOUT || cType == PIPE)
+    {
+        fprintf(stderr, "setenv takes one or two parameter");
+        return FALSE;
+    }
+    else
+    {
+        char *firstParam = getTokenValue(DynArray_get(oTokens, 1));
+        char *secondParam = getTokenValue(DynArray_get(oTokens, 2));
+        int result = setenv(firstParam, secondParam, 1);
+        if (result == -1)
+        {
+            fprintf(stderr, "%s\n", strerror(errno));
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 int execUnsetenv(DynArray_T oTokens)
 {
+    int commandLine = DynArray_getLength(oTokens);
+    if (commandLine != 2)
+    {
+        fprintf(stderr, "unsetenv Takes one parameter");
+        return FALSE;
+    }
+    else
+    {
+        char *firstParam = getTokenValue(DynArray_get(oTokens, 1));
+        int result = unsetenv(firstParam);
+        if (result == -1)
+        {
+            fprint(stderr, "%s\n", strerror(errno));
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 int execExit(DynArray_T oTokens)
 {
+    int commandLine = DynArray_getLength(oTokens);
+    if (commandLine != 1)
+    {
+        fprintf(stderr, "exit does not take any parameters");
+        return FALSE;
+    }
+    else
+    {
+        exit(0);
+    }
+    return TRUE;
 }
 
 enum BuiltInCommand
