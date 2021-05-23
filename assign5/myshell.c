@@ -119,6 +119,29 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
     return cTokens;
 }
 
+void commandsConstructor(DynArray_T Tokens, char **command)
+{
+    assert(command);
+    int length = DynArray_getLength(Tokens);
+    command = calloc(length, sizeof(char *));
+    for (int i = 0; i < length; i++)
+    {
+        char *value = getTokenValue(DynArray_get(Tokens, i));
+        command[i] = strdup(value);
+    }
+}
+
+static int **pipeConstructor(int pipeNumbers)
+{
+    int **pip = (int **)calloc(pipeNumbers, sizeof(int*);
+
+    for (int i = 0; i < pipeNumbers; i++)
+    {
+        *pip = calloc(2, sizeof(int));
+    }
+    return pip
+}
+
 int execute(DynArray_T oTokens, char **argv)
 {
     int status;
@@ -127,33 +150,37 @@ int execute(DynArray_T oTokens, char **argv)
     //DynArray_T를 element로 가지는 DynArray
     DynArray_T cTokens = DynArray_new(0);
     cTokens = commandsSpliter(oTokens, cTokens);
+    int commandSize = DynArray_getLength(cTokens);
 
-        int commandSize = DynArray_getLength(cTokens);
-    int pipeNumbers = commandSize - 1;
-
-    //cTokens을 Array화 시킨 commandLines
-    void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
-    DynArray_toArray(cTokens, commandLines);
-
-    //pipe creation
-    int **pip = (int **)calloc(pipeNumbers, sizeof(int*);
-
-    for (int i = 0; i < pipeNumbers; i++)
+    //commandLines: 각 Command를 가지고 있는 배열
+    char ***commandLines = (char ***)calloc(commandSize, sizeof(char **));
+    for (int i = 0; i < commandSize; i++)
     {
-        *pip = calloc(2, sizeof(int));
+        commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
     }
 
+    // //cTokens을 Array화 시킨 commandLines
+    // void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
+    // DynArray_toArray(cTokens, commandLines);
+
+    //pipe creation
+    int pipeNumbers = commandSize - 1;
+    int **pip = pipeConstructor(pipeNumbers);
 
     // for (int i = 0; i < commandSize; i++)
     // {
     //     DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
     // }
-
-    for(int i = 0; i < pipeNumbers; i++){
+    for (int i = 0; i < pipeNumbers; i++)
+    {
         if (pipe(pip[i]) == -1)
         {
             exit(-1);
         }
+    }
+
+    for (int i = 0; i < commandSize; i++)
+    {
         fflush(NULL);
         pid_t childId = fork();
         if (childId == -1)
@@ -163,9 +190,9 @@ int execute(DynArray_T oTokens, char **argv)
         }
         if (childId == 0)
         {
-            if (commands != NULL)
+            if (commandLines[i] != NULL)
             {
-                execvp(commands[0], commands);
+                execvp(commandLines[i][0], commandLines[i]);
                 perror(argv[0]);
                 exit(EXIT_FAILURE);
             }
@@ -173,7 +200,7 @@ int execute(DynArray_T oTokens, char **argv)
         else
         {
             childId = wait(&status);
-            free(commands);
+            free(commandLines[i]);
             return TRUE;
         }
     }
