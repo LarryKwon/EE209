@@ -77,7 +77,7 @@ static int findCommandType(const void *Token, const void *command)
     }
 }
 
-DynArray_T commandsConstructor(DynArray_T oTokens, DynArray_T cTokens)
+DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
 {
     assert(oTokens);
     assert(cTokens);
@@ -126,8 +126,9 @@ int execute(DynArray_T oTokens, char **argv)
 
     //DynArray_T를 element로 가지는 DynArray
     DynArray_T cTokens = DynArray_new(0);
-    cTokens = commandsConstructor(oTokens, cTokens);
-    int commandSize = DynArray_getLength(cTokens);
+    cTokens = commandsSpliter(oTokens, cTokens);
+
+        int commandSize = DynArray_getLength(cTokens);
     int pipeNumbers = commandSize - 1;
 
     //cTokens을 Array화 시킨 commandLines
@@ -135,19 +136,47 @@ int execute(DynArray_T oTokens, char **argv)
     DynArray_toArray(cTokens, commandLines);
 
     //pipe creation
-
-    int **pip = calloc(pipeNumbers, sizeof(int(*fds)[2]));
+    int **pip = (int **)calloc(pipeNumbers, sizeof(int*);
 
     for (int i = 0; i < pipeNumbers; i++)
     {
+        *pip = calloc(2, sizeof(int));
     }
+
 
     // for (int i = 0; i < commandSize; i++)
     // {
     //     DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
     // }
 
-    //pipe creation
+    for(int i = 0; i < pipeNumbers; i++){
+        if (pipe(pip[i]) == -1)
+        {
+            exit(-1);
+        }
+        fflush(NULL);
+        pid_t childId = fork();
+        if (childId == -1)
+        {
+            perror(argv[0]);
+            return EXIT_FAILURE;
+        }
+        if (childId == 0)
+        {
+            if (commands != NULL)
+            {
+                execvp(commands[0], commands);
+                perror(argv[0]);
+                exit(EXIT_FAILURE);
+            }
+        }
+        else
+        {
+            childId = wait(&status);
+            free(commands);
+            return TRUE;
+        }
+    }
 
     // fflush(NULL);
     // pid_t childId = fork();
