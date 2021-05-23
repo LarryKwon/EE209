@@ -53,7 +53,7 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     if (syntatic)
     {
         //printf("%s\n", "valid");
-        DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        //DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
     }
     else
     {
@@ -86,17 +86,35 @@ DynArray_T commandsConstructor(DynArray_T oTokens, DynArray_T cTokens)
     int index = 0;
     int prevIndex = 0;
     enum CommandType *commandTypes;
-    *commandTypes = COMMAND;
-    while ((index = DynArray_search(oTokens, commandTypes, findCommandType)) != -1)
+    *commandTypes = PIPE;
+    while (index < length)
     {
+        index = DynArray_search(oTokens, commandTypes, findCommandType);
+
+        if (index == -1)
+        {
+            index = length;
+        }
+
+        //하나의 command Line을 담는 DynArray
         DynArray_T command = DynArray_new(0);
         for (int i = prevIndex; i < index; i++)
         {
             DynArray_add(command, DynArray_removeAt(oTokens, 0));
         }
+        DynArray_map(command, printAnyTokenWithCommandType, NULL);
         DynArray_add(command, NULL);
         DynArray_add(cTokens, command);
-        prevIndex = index;
+        prevIndex = index + 1;
+        if (DynArray_getLength(oTokens) == 0)
+        {
+            continue;
+        }
+        else
+        {
+            DynArray_removeAt(oTokens, 0);
+        }
+        DynArray_free(oTokens);
     }
     return cTokens;
 }
@@ -105,15 +123,29 @@ int execute(DynArray_T oTokens, char **argv)
 {
     int status;
     int length = DynArray_getLength(oTokens);
+
+    //DynArray_T를 element로 가지는 DynArray
     DynArray_T cTokens = DynArray_new(0);
     cTokens = commandsConstructor(oTokens, cTokens);
     int commandSize = DynArray_getLength(cTokens);
+    int pipeNumbers = commandSize - 1;
+
+    //cTokens을 Array화 시킨 commandLines
     void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
     DynArray_toArray(cTokens, commandLines);
-    for (int i = 0; i < commandSize; i++)
+
+    //pipe creation
+
+    int **pip = calloc(pipeNumbers, sizeof(int(*fds)[2]));
+
+    for (int i = 0; i < pipeNumbers; i++)
     {
-        DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
     }
+
+    // for (int i = 0; i < commandSize; i++)
+    // {
+    //     DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
+    // }
 
     //pipe creation
 
