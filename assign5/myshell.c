@@ -145,7 +145,7 @@ static int **pipeConstructor(int pipeNumbers)
 
 void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes)
 {
-    if (commandIndex < commandSize)
+    if (commandIndex < (commandSize - 1))
     {
         if (pipe(pipes[commandIndex]) == -1)
         {
@@ -163,12 +163,28 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
     case 0:
         if (command != NULL)
         {
-            //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
-            if (pipeNumbers > 0)
+            //middle command
+            //if commandIndex < commandSize
+            // stdin -> pipes[commandIndex-1]
+            // stdout -> pipes[commandIndex]
+            if (commandIndex < (commandSize - 1))
             {
-                close(fds[0]);
-                dup2(fds[1], 1); /* stdout */
-                close(fds[1]);
+                close(pipes[commandIndex - 1][1]);
+                close(pipes[commandIndex][0]);
+
+                dup2(pipes[commandIndex][1], 1);
+                close(pipes[commandIndex][1]);
+                dup2(pipes[commandIndex - 1][0], 0);
+                close(pipes[commandIndex - 1][0]);
+            }
+            //last command
+            //if commandIndex == commandSize
+            // stdin -> pipes[commandIndex-1]
+            else if (commandIndex == (commandSize - 1))
+            {
+                close(pipes[commandIndex - 1][1]);
+                dup2(pipes[commandIndex - 1][0], 0);
+                close(pipes[commandIndex - 1][0]);
             }
             execvp(command[0], command);
             perror(argv[0]);
@@ -245,9 +261,9 @@ int execute(DynArray_T oTokens, char **argv)
             //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
             if (pipeNumbers > 0)
             {
-                close(fds[0]);
-                dup2(fds[1], 1); /* stdout */
-                close(fds[1]);
+                close(pipes[commandIndex][0]);
+                dup2(pipes[commandIndex][1], 1); /* stdout */
+                close(pipes[commandIndex][1]);
             }
             execvp(commandLines[0][0], commandLines[0]);
             perror(argv[0]);
