@@ -63,50 +63,82 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     return oTokens;
 }
 
-void commandsConstructor(DynArray_T Tokens, char **commands)
+static int findCommandType(const void *Token, const void *command)
 {
-    assert(commands);
-    int length = DynArray_getLength(Tokens);
-
-    for (int i = 0; i < length; i++)
+    Token_T token = (Token_T)Token;
+    enum CommandType *commandType = (enum CommandType *)command;
+    if (getCommandType(token) == *commandType)
     {
-        char *value = getTokenValue(DynArray_get(Tokens, i));
-        commands[i] = strdup(value);
+        return 0;
     }
-    commands[length] = NULL;
+    else
+    {
+        return -1;
+    }
+}
+
+DynArray_T commandsConstructor(DynArray_T oTokens, DynArray_T cTokens)
+{
+    assert(oTokens);
+    assert(cTokens);
+    int length = DynArray_getLength(oTokens);
+
+    int index = 0;
+    int prevIndex = 0;
+    enum CommandType *commandTypes;
+    *commandTypes = COMMAND;
+    while ((index = DynArray_search(oTokens, commandTypes, findCommandType)) != -1)
+    {
+        DynArray_T command = DynArray_new(0);
+        for (int i = prevIndex; i < index; i++)
+        {
+            DynArray_add(command, DynArray_removeAt(oTokens, 0));
+        }
+        DynArray_add(command, NULL);
+        DynArray_add(cTokens, command);
+        prevIndex = index;
+    }
+    return cTokens;
 }
 
 int execute(DynArray_T oTokens, char **argv)
 {
     int status;
     int length = DynArray_getLength(oTokens);
-    char **commands = malloc(length + 1);
-    commandsConstructor(oTokens, commands);
-    
-    //commands를 모아놓은 배열을 제작해야한다.
+    DynArray_T cTokens = DynArray_new(0);
+    cTokens = commandsConstructor(oTokens, cTokens);
+    int commandSize = DynArray_getLength(cTokens);
+    void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
+    DynArray_toArray(cTokens, commandLines);
+    for (int i = 0; i < commandSize; i++)
+    {
+        DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
+    }
 
-    fflush(NULL);
-    pid_t childId = fork();
-    if (childId == -1)
-    {
-        perror(argv[0]);
-        return EXIT_FAILURE;
-    }
-    if (childId == 0)
-    {
-        if (commands != NULL)
-        {
-            execvp(commands[0], commands);
-            perror(argv[0]);
-            exit(EXIT_FAILURE);
-        }
-    }
-    else
-    {
-        childId = wait(&status);
-        free(commands);
-        return TRUE;
-    }
+    //pipe creation
+
+    // fflush(NULL);
+    // pid_t childId = fork();
+    // if (childId == -1)
+    // {
+    //     perror(argv[0]);
+    //     return EXIT_FAILURE;
+    // }
+    // if (childId == 0)
+    // {
+    //     if (commands != NULL)
+    //     {
+    //         execvp(commands[0], commands);
+    //         perror(argv[0]);
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
+    // else
+    // {
+    //     childId = wait(&status);
+    //     free(commands);
+    //     return TRUE;
+    // }
 }
 
 int main(int argc, char *argv[])
