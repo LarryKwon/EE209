@@ -63,7 +63,7 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     return oTokens;
 }
 
-void constructCommands(DynArray_T Tokens, char **commands)
+void commandsConstructor(DynArray_T Tokens, char **commands)
 {
     assert(commands);
     int length = DynArray_getLength(Tokens);
@@ -81,7 +81,10 @@ int execute(DynArray_T oTokens, char **argv)
     int status;
     int length = DynArray_getLength(oTokens);
     char **commands = malloc(length + 1);
-    constructCommands(oTokens, commands);
+    commandsConstructor(oTokens, commands);
+    
+    //commands를 모아놓은 배열을 제작해야한다.
+
     fflush(NULL);
     pid_t childId = fork();
     if (childId == -1)
