@@ -103,7 +103,6 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
             DynArray_add(command, DynArray_removeAt(oTokens, 0));
         }
         DynArray_map(command, printAnyTokenWithCommandType, NULL);
-        DynArray_add(command, NULL);
         DynArray_add(cTokens, command);
         prevIndex = index + 1;
         if (DynArray_getLength(oTokens) == 0)
@@ -114,32 +113,34 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
         {
             DynArray_removeAt(oTokens, 0);
         }
-        DynArray_free(oTokens);
     }
+    DynArray_free(oTokens);
     return cTokens;
 }
 
-void commandsConstructor(DynArray_T Tokens, char **command)
+char **commandsConstructor(DynArray_T Tokens, char **command)
 {
-    assert(command);
     int length = DynArray_getLength(Tokens);
-    command = calloc(length, sizeof(char *));
+    command = calloc(length + 1, sizeof(char *));
     for (int i = 0; i < length; i++)
     {
         char *value = getTokenValue(DynArray_get(Tokens, i));
         command[i] = strdup(value);
     }
+    command[length] = NULL;
+
+    return command;
 }
 
 static int **pipeConstructor(int pipeNumbers)
 {
-    int **pip = (int **)calloc(pipeNumbers, sizeof(int*);
+    int **pipes = (int **)calloc(pipeNumbers, sizeof(int *));
 
     for (int i = 0; i < pipeNumbers; i++)
     {
-        *pip = calloc(2, sizeof(int));
+        *pipes = calloc(2, sizeof(int));
     }
-    return pip
+    return pipes;
 }
 
 int execute(DynArray_T oTokens, char **argv)
@@ -156,28 +157,30 @@ int execute(DynArray_T oTokens, char **argv)
     char ***commandLines = (char ***)calloc(commandSize, sizeof(char **));
     for (int i = 0; i < commandSize; i++)
     {
-        commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
+        commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
     }
-
     // //cTokens을 Array화 시킨 commandLines
     // void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
     // DynArray_toArray(cTokens, commandLines);
-
-    //pipe creation
-    int pipeNumbers = commandSize - 1;
-    int **pip = pipeConstructor(pipeNumbers);
 
     // for (int i = 0; i < commandSize; i++)
     // {
     //     DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
     // }
+
+    //pipe creation
+    int pipeNumbers = commandSize - 1;
+    int **pipes = pipeConstructor(pipeNumbers);
+
     for (int i = 0; i < pipeNumbers; i++)
     {
-        if (pipe(pip[i]) == -1)
+        if (pipe(pipes[i]) == -1)
         {
             exit(-1);
         }
     }
+
+    pid_t *childs = calloc(commandSize, sizeof(pid_t *));
 
     for (int i = 0; i < commandSize; i++)
     {
@@ -261,7 +264,7 @@ int main(int argc, char *argv[])
         }
         printf("%% ");
 
-        DynArray_map(oTokens, freeToken, NULL);
-        DynArray_free(oTokens);
+        //DynArray_map(oTokens, freeToken, NULL);
+        //DynArray_free(oTokens);
     }
 }
