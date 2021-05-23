@@ -143,6 +143,47 @@ static int **pipeConstructor(int pipeNumbers)
     return pipes;
 }
 
+void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes)
+{
+    if (commandIndex < commandSize)
+    {
+        if (pipe(pipes[commandIndex]) == -1)
+        {
+            exit(-1);
+        }
+    }
+    fflush(NULL);
+    pid_t childId = fork();
+    switch (childId)
+    {
+    case -1:
+        perror(argv[0]);
+        return EXIT_FAILURE;
+        break;
+    case 0:
+        if (command != NULL)
+        {
+            //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
+            if (pipeNumbers > 0)
+            {
+                close(fds[0]);
+                dup2(fds[1], 1); /* stdout */
+                close(fds[1]);
+            }
+            execvp(command[0], command);
+            perror(argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    default:
+        commandIndex += 1;
+        recursivePipe(commandIndex, commandlines, commandLines[commandIndex], commandSize, pipeNumbers, pipes);
+        wait(&status);
+
+        //commandLine에 있는 strdup한거 다 free시켜야함
+        free(commandLines[i]);
+    }
+}
+
 int execute(DynArray_T oTokens, char **argv)
 {
     int status;
@@ -172,41 +213,58 @@ int execute(DynArray_T oTokens, char **argv)
     int pipeNumbers = commandSize - 1;
     int **pipes = pipeConstructor(pipeNumbers);
 
-    for (int i = 0; i < pipeNumbers; i++)
+    // for (int i = 0; i < pipeNumbers; i++)
+    // {
+    //     if (pipe(pipes[i]) == -1)
+    //     {
+    //         exit(-1);
+    //     }
+    // }
+
+    // pid_t *processIds = calloc(commandSize, sizeof(pid_t *));
+
+    if (pipeNumbers > 0)
     {
-        if (pipe(pipes[i]) == -1)
+        if (pipe(pipes[0]) == -1)
         {
             exit(-1);
         }
     }
-
-    pid_t *childs = calloc(commandSize, sizeof(pid_t *));
-
-    for (int i = 0; i < commandSize; i++)
+    fflush(NULL);
+    pid_t childId = fork();
+    int commandIndex = 0;
+    switch (childId)
     {
-        fflush(NULL);
-        pid_t childId = fork();
-        if (childId == -1)
+    case -1:
+        perror(argv[0]);
+        return EXIT_FAILURE;
+        break;
+    case 0:
+        if (commandLines[0] != NULL)
         {
-            perror(argv[0]);
-            return EXIT_FAILURE;
-        }
-        if (childId == 0)
-        {
-            if (commandLines[i] != NULL)
+            //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
+            if (pipeNumbers > 0)
             {
-                execvp(commandLines[i][0], commandLines[i]);
-                perror(argv[0]);
-                exit(EXIT_FAILURE);
+                close(fds[0]);
+                dup2(fds[1], 1); /* stdout */
+                close(fds[1]);
             }
+            execvp(commandLines[0][0], commandLines[0]);
+            perror(argv[0]);
+            exit(EXIT_FAILURE);
         }
-        else
+    default:
+        wait(&status);
+        if (commandSize > 1)
         {
-            childId = wait(&status);
-            free(commandLines[i]);
-            return TRUE;
+            commandIndex += 1;
+            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes);
         }
+        //commandLine에 있는 strdup한거 다 free시켜야함
+        free(commandLines[i]);
     }
+    wait(&status);
+    return TRUE;
 
     // fflush(NULL);
     // pid_t childId = fork();
