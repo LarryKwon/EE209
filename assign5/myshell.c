@@ -87,27 +87,27 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
     int prevIndex = 0;
     enum CommandType *commandTypes;
     *commandTypes = PIPE;
-    while (index < length)
+    while (TRUE)
     {
         index = DynArray_search(oTokens, commandTypes, findCommandType);
 
         if (index == -1)
         {
-            index = length;
+            index = DynArray_getLength(oTokens);
         }
 
         //하나의 command Line을 담는 DynArray
         DynArray_T command = DynArray_new(0);
-        for (int i = prevIndex; i < index; i++)
+        for (int i = 0; i < index; i++)
         {
             DynArray_add(command, DynArray_removeAt(oTokens, 0));
         }
         DynArray_map(command, printAnyTokenWithCommandType, NULL);
         DynArray_add(cTokens, command);
-        prevIndex = index + 1;
+        // prevIndex = index + 1;
         if (DynArray_getLength(oTokens) == 0)
         {
-            continue;
+            break;
         }
         else
         {
@@ -138,14 +138,13 @@ static int **pipeConstructor(int pipeNumbers)
 
     for (int i = 0; i < pipeNumbers; i++)
     {
-        *pipes = calloc(2, sizeof(int));
+        pipes[i] = calloc(2, sizeof(int));
     }
     return pipes;
 }
 
 void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes, char **argv)
 {
-    int status;
     if (commandIndex < (commandSize - 1))
     {
         if (pipe(pipes[commandIndex]) == -1)
@@ -153,45 +152,54 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
             exit(-1);
         }
     }
-    fflush(NULL);
-    pid_t childId = fork();
-    switch (childId)
+    if (commandIndex < commandSize)
     {
-    case -1:
-        perror(argv[0]);
-        exit(1);
-        break;
-    case 0:
-        if (command != NULL)
+        fflush(NULL);
+        pid_t childId = fork();
+        if (childId == -1)
         {
-            //middle command
-            //if commandIndex < commandSize
-            // stdin -> pipes[commandIndex-1]
-            // stdout -> pipes[commandIndex]
-            if (commandIndex < (commandSize - 1))
-            {
-                close(pipes[commandIndex - 1][1]);
-                close(pipes[commandIndex][0]);
-
-                dup2(pipes[commandIndex][1], 1);
-                close(pipes[commandIndex][1]);
-                dup2(pipes[commandIndex - 1][0], 0);
-                close(pipes[commandIndex - 1][0]);
-            }
-            //last command
-            //if commandIndex == commandSize
-            // stdin -> pipes[commandIndex-1]
-            else if (commandIndex == (commandSize - 1))
-            {
-                close(pipes[commandIndex - 1][1]);
-                dup2(pipes[commandIndex - 1][0], 0);
-                close(pipes[commandIndex - 1][0]);
-            }
-            execvp(command[0], command);
             perror(argv[0]);
             exit(1);
         }
-    default:
+        else if (childId == 0)
+        {
+            if (command != NULL)
+            {
+                //middle command
+                //if commandIndex < commandSize
+                // stdin -> pipes[commandIndex-1]
+                // stdout -> pipes[commandIndex]
+                if (commandIndex < (commandSize - 1))
+                {
+                    close(pipes[commandIndex - 1][1]);
+                    close(pipes[commandIndex][0]);
+
+                    dup2(pipes[commandIndex][1], 1);
+                    close(pipes[commandIndex][1]);
+                    dup2(pipes[commandIndex - 1][0], 0);
+                    close(pipes[commandIndex - 1][0]);
+                }
+                //last command
+                //if commandIndex == commandSize
+                // stdin -> pipes[commandIndex-1]
+                else if (commandIndex == (commandSize - 1))
+                {
+                    close(pipes[commandIndex - 1][1]);
+                    dup2(pipes[commandIndex - 1][0], 0);
+                    close(pipes[commandIndex - 1][0]);
+                }
+                printf("child %d %s\n", commandIndex, *command);
+                fflush(NULL);
+                execvp(command[0], command);
+                perror(argv[0]);
+                exit(EXIT_FAILURE);
+            }
+            else
+            {
+                exit(EXIT_SUCCESS);
+            }
+        }
+        int status;
         wait(&status);
         commandIndex += 1;
         if (commandIndex < commandSize)
@@ -205,7 +213,6 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
 
 int execute(DynArray_T oTokens, char **argv)
 {
-    int status;
     int length = DynArray_getLength(oTokens);
 
     //DynArray_T를 element로 가지는 DynArray
@@ -249,16 +256,16 @@ int execute(DynArray_T oTokens, char **argv)
             exit(-1);
         }
     }
+    int commandIndex = 0;
     fflush(NULL);
     pid_t childId = fork();
-    int commandIndex = 0;
-    switch (childId)
+    if (childId == -1)
     {
-    case -1:
         perror(argv[0]);
         exit(1);
-        break;
-    case 0:
+    }
+    else if (childId == 0)
+    {
         if (commandLines[0] != NULL)
         {
             //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
@@ -268,45 +275,47 @@ int execute(DynArray_T oTokens, char **argv)
                 dup2(pipes[commandIndex][1], 1); /* stdout */
                 close(pipes[commandIndex][1]);
             }
+            printf("%s \n %s", "child1", *commandLines[0]);
+            fflush(NULL);
             execvp(commandLines[0][0], commandLines[0]);
             perror(argv[0]);
             exit(1);
         }
-    default:
-        wait(&status);
-        if (commandSize > 1)
-        {
-            commandIndex += 1;
-            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
-        }
-        //commandLine에 있는 strdup한거 다 free시켜야함
-        free(commandLines[0]);
     }
+    int status;
+    wait(&status);
+    if (commandSize > 1)
+    {
+        commandIndex += 1;
+        recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
+    }
+    //commandLine에 있는 strdup한거 다 free시켜야함
+    free(commandLines[0]);
     return TRUE;
-
-    // fflush(NULL);
-    // pid_t childId = fork();
-    // if (childId == -1)
-    // {
-    //     perror(argv[0]);
-    //     return EXIT_FAILURE;
-    // }
-    // if (childId == 0)
-    // {
-    //     if (commands != NULL)
-    //     {
-    //         execvp(commands[0], commands);
-    //         perror(argv[0]);
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
-    // else
-    // {
-    //     childId = wait(&status);
-    //     free(commands);
-    //     return TRUE;
-    // }
 }
+
+// fflush(NULL);
+// pid_t childId = fork();
+// if (childId == -1)
+// {
+//     perror(argv[0]);
+//     return EXIT_FAILURE;
+// }
+// if (childId == 0)
+// {
+//     if (commands != NULL)
+//     {
+//         execvp(commands[0], commands);
+//         perror(argv[0]);
+//         exit(EXIT_FAILURE);
+//     }
+// }
+// else
+// {
+//     childId = wait(&status);
+//     free(commands);
+//     return TRUE;
+// }
 
 int main(int argc, char *argv[])
 {
