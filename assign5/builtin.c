@@ -208,4 +208,5 @@ BuiltIn_T BuiltInContext(enum BuiltInCommand builtInCommand)
 
         break;
     }
+    return NULL;
 }

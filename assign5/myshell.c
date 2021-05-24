@@ -36,7 +36,7 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     if (oTokens == NULL)
     {
         fprintf(stderr, "Cannot allocate memory\n");
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     lexical = lexLine(acLine, oTokens);
@@ -143,8 +143,9 @@ static int **pipeConstructor(int pipeNumbers)
     return pipes;
 }
 
-void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes)
+void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes, char **argv)
 {
+    int status;
     if (commandIndex < (commandSize - 1))
     {
         if (pipe(pipes[commandIndex]) == -1)
@@ -158,7 +159,7 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
     {
     case -1:
         perror(argv[0]);
-        return EXIT_FAILURE;
+        exit(1);
         break;
     case 0:
         if (command != NULL)
@@ -188,15 +189,17 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
             }
             execvp(command[0], command);
             perror(argv[0]);
-            exit(EXIT_FAILURE);
+            exit(1);
         }
     default:
-        commandIndex += 1;
-        recursivePipe(commandIndex, commandlines, commandLines[commandIndex], commandSize, pipeNumbers, pipes);
         wait(&status);
-
+        commandIndex += 1;
+        if (commandIndex < commandSize)
+        {
+            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
+        }
         //commandLine에 있는 strdup한거 다 free시켜야함
-        free(commandLines[i]);
+        free(command);
     }
 }
 
@@ -253,7 +256,7 @@ int execute(DynArray_T oTokens, char **argv)
     {
     case -1:
         perror(argv[0]);
-        return EXIT_FAILURE;
+        exit(1);
         break;
     case 0:
         if (commandLines[0] != NULL)
@@ -267,19 +270,18 @@ int execute(DynArray_T oTokens, char **argv)
             }
             execvp(commandLines[0][0], commandLines[0]);
             perror(argv[0]);
-            exit(EXIT_FAILURE);
+            exit(1);
         }
     default:
         wait(&status);
         if (commandSize > 1)
         {
             commandIndex += 1;
-            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes);
+            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
         }
         //commandLine에 있는 strdup한거 다 free시켜야함
-        free(commandLines[i]);
+        free(commandLines[0]);
     }
-    wait(&status);
     return TRUE;
 
     // fflush(NULL);
