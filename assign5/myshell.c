@@ -154,6 +154,7 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
     }
     if (commandIndex < commandSize)
     {
+        int status;
         fflush(NULL);
         pid_t childId = fork();
         if (childId == -1)
@@ -163,6 +164,8 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
         }
         else if (childId == 0)
         {
+            printf("child: %d\n", getpid());
+
             if (command != NULL)
             {
                 //middle command
@@ -171,6 +174,8 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
                 // stdout -> pipes[commandIndex]
                 if (commandIndex < (commandSize - 1))
                 {
+                    printf("%s\n", "middle command");
+
                     close(pipes[commandIndex - 1][1]);
                     close(pipes[commandIndex][0]);
 
@@ -184,7 +189,8 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
                 // stdin -> pipes[commandIndex-1]
                 else if (commandIndex == (commandSize - 1))
                 {
-                    close(pipes[commandIndex - 1][1]);
+                    printf("%s\n", "last command");
+                    // close(pipes[commandIndex - 1][1]);
                     dup2(pipes[commandIndex - 1][0], 0);
                     close(pipes[commandIndex - 1][0]);
                 }
@@ -199,8 +205,10 @@ void recursivePipe(int commandIndex, char ***commandLines, char **command, int c
                 exit(EXIT_SUCCESS);
             }
         }
-        int status;
-        wait(&status);
+        printf("parent: %d\n", getpid());
+        fflush(NULL);
+        int childpid = wait(&status);
+        printf("%d\n", childpid);
         commandIndex += 1;
         if (commandIndex < commandSize)
         {
@@ -226,28 +234,10 @@ int execute(DynArray_T oTokens, char **argv)
     {
         commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
     }
-    // //cTokens을 Array화 시킨 commandLines
-    // void **commandLines = (void **)calloc(commandSize, sizeof(struct DynArray *));
-    // DynArray_toArray(cTokens, commandLines);
-
-    // for (int i = 0; i < commandSize; i++)
-    // {
-    //     DynArray_map(commandLines[i], printAnyTokenWithCommandType, NULL);
-    // }
 
     //pipe creation
     int pipeNumbers = commandSize - 1;
     int **pipes = pipeConstructor(pipeNumbers);
-
-    // for (int i = 0; i < pipeNumbers; i++)
-    // {
-    //     if (pipe(pipes[i]) == -1)
-    //     {
-    //         exit(-1);
-    //     }
-    // }
-
-    // pid_t *processIds = calloc(commandSize, sizeof(pid_t *));
 
     if (pipeNumbers > 0)
     {
@@ -268,15 +258,18 @@ int execute(DynArray_T oTokens, char **argv)
     {
         if (commandLines[0] != NULL)
         {
+            printf("%s %s\n", "child0", commandLines[0][0]);
+            fflush(NULL);
             //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
             if (pipeNumbers > 0)
             {
+                printf("%s 1 %s\n", "child0", commandLines[0][0]);
+                fflush(NULL);
                 close(pipes[commandIndex][0]);
                 dup2(pipes[commandIndex][1], 1); /* stdout */
                 close(pipes[commandIndex][1]);
             }
-            printf("%s \n %s", "child1", *commandLines[0]);
-            fflush(NULL);
+            //printf("%s \n %s", "child0", *commandLines[0]);
             execvp(commandLines[0][0], commandLines[0]);
             perror(argv[0]);
             exit(1);
