@@ -174,6 +174,13 @@ int execute(DynArray_T oTokens, char **argv)
             }
         }
         //우선 첫번째 파이프는 이렇게 조정
+        printf("%s %d\n", "pipe1", pipes[0][0]);
+        close(pipes[0][0]);
+        printf("%s %d\n", "pipe1", pipes[0][1]);
+        dup2(pipes[0][1], 1); /* stdout */
+        //printf("%s %d\n", "pipe1", 1);
+        close(pipes[0][1]);
+        //printf("%s %d\n", "pipe1", 3);
     }
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
@@ -198,13 +205,6 @@ int execute(DynArray_T oTokens, char **argv)
             if (commandIndex == 0)
             {
                 printf("%s %d\n", "child first case", getpid());
-                printf("%s %d\n", "pipe1", pipes[0][0]);
-                close(pipes[0][0]);
-                printf("%s %d\n", "pipe1", pipes[0][1]);
-                dup2(pipes[0][1], 1); /* stdout */
-                //printf("%s %d\n", "pipe1", 1);
-                close(pipes[0][1]);
-                //printf("%s %d\n", "pipe1", 3);
             }
             /* 마지막일 때
                 pipe를 stdin에만 붙이고
@@ -241,9 +241,9 @@ int execute(DynArray_T oTokens, char **argv)
         // commandIndex = 0 이라면, stdout을 원래 STDOUT_FILENO으로 돌려놓기
         if (commandIndex == 0)
         {
-            //dup2(STDOUT_FILENO, 1);
+            dup2(STDOUT_FILENO, 1);
         }
-        printf("%s %d\n", "commandIndex", commandIndex);
+        // printf("%s %d\n", "commandIndex", commandIndex);
         commandIndex += 1;
     }
     //공통적으로 사용하지 않는 파일 디스크립터 전부 닫기
