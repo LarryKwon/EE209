@@ -168,15 +168,19 @@ int execute(DynArray_T oTokens, char **argv)
     {
         for (int i = 0; i < pipeNumbers; i++)
         {
-            if (pipe(pipes[0]) == -1)
+            if (pipe(pipes[i]) == -1)
             {
                 exit(-1);
             }
         }
         //우선 첫번째 파이프는 이렇게 조정
+        printf("%s %d\n", "pipe1", 0);
         close(pipes[0][0]);
+        printf("%s %d\n", "pipe1", 1);
         dup2(pipes[0][1], 1); /* stdout */
+        printf("%s %d\n", "pipe1", 2);
         close(pipes[0][1]);
+        printf("%s %d\n", "pipe1", 3);
     }
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
@@ -209,6 +213,7 @@ int execute(DynArray_T oTokens, char **argv)
                 /* stdin */
                 close(pipes[commandIndex - 1][1]);
                 dup2(pipes[commandIndex - 1][0], 0);
+                dup2(STDOUT_FILENO, 1);
                 close(pipes[commandIndex][0]);
             }
             /* 중간일 때
@@ -224,7 +229,7 @@ int execute(DynArray_T oTokens, char **argv)
                 close(pipes[commandIndex][0]);
                 dup2(pipes[commandIndex][1], 1);
             }
-
+            printf("%s %d\n", "child", commandIndex);
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
