@@ -173,6 +173,10 @@ int execute(DynArray_T oTokens, char **argv)
                 exit(-1);
             }
         }
+        //우선 첫번째 파이프는 이렇게 조정
+        close(pipes[0][0]);
+        dup2(pipes[0][1], 1); /* stdout */
+        close(pipes[0][1]);
     }
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
@@ -190,44 +194,60 @@ int execute(DynArray_T oTokens, char **argv)
         else if (childId == 0)
         {
             //명령어 실행
-            //
-        }
-        //부모 프로세스
-        //pipe들 간의 관계 조정
-    }
-    fflush(NULL);
-    pid_t childId = fork();
-    if (childId == -1)
-    {
-        perror(argv[0]);
-        exit(1);
-    }
-    //자식 프로세스
-    else if (childId == 0)
-    {
-        if (commandLines[0] != NULL)
-        {
-            printf("%s %s\n", "child0", commandLines[0][0]);
-            fflush(NULL);
-            //1번 pipe설정: pipe가 있다면, 첫번째꺼일꺼니까, stdout을 pipes[0][]
-            if (pipeNumbers > 0)
+            /*첫번째 명령어일 때
+              명령어 그냥 실행  
+            */
+            if (commandIndex == 0)
             {
-                printf("%s 1 %s\n", "child0", commandLines[0][0]);
-                fflush(NULL);
-                close(pipes[commandIndex][0]);
-                dup2(pipes[commandIndex][1], 1); /* stdout */
-                close(pipes[commandIndex][1]);
             }
-            //printf("%s \n %s", "child0", *commandLines[0]);
-            execvp(commandLines[0][0], commandLines[0]);
+            /* 마지막일 때
+                pipe를 stdin에만 붙이고
+                명령어 실행
+            */
+            else if (commandIndex == commandSize - 1)
+            {
+                /* stdin */
+                close(pipes[commandIndex - 1][1]);
+                dup2(pipes[commandIndex - 1][0], 0);
+                close(pipes[commandIndex][0]);
+            }
+            /* 중간일 때
+                commandIndex에 맞는 pipe를 stdin과 stdout에 붙인 후
+                명령어 실행
+            */
+            else
+            {
+                /* stdin */
+                close(pipes[commandIndex - 1][1]);
+                dup2(pipes[commandIndex - 1][0], 0);
+                /* stdout */
+                close(pipes[commandIndex][0]);
+                dup2(pipes[commandIndex][1], 1);
+            }
+
+            execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
         }
+        // commandIndex = 0 이라면, stdout을 원래 STDOUT_FILENO으로 돌려놓기
+        if (commandIndex == 0)
+        {
+            dup2(STDOUT_FILENO, 1);
+        }
+        commandIndex += 1;
     }
-    // 부모 프로세스
+    //공통적으로 사용하지 않는 파일 디스크립터 전부 닫기
+    for (int i = 0; i < pipeNumbers; i++)
+    {
+        close(pipes[i][0]);
+        close(pipes[i][1]);
+    }
+
+    //모든 자식들 끝날 때까지 기다리기
     int status;
     while ((wait(&status)) > 0)
         ;
+
     //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
     return TRUE;
