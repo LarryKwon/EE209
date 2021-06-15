@@ -174,13 +174,6 @@ int execute(DynArray_T oTokens, char **argv)
             }
         }
         //우선 첫번째 파이프는 이렇게 조정
-        printf("%s %d\n", "pipe1", 0);
-        close(pipes[0][0]);
-        printf("%s %d\n", "pipe1", 1);
-        dup2(pipes[0][1], 1); /* stdout */
-        printf("%s %d\n", "pipe1", 2);
-        close(pipes[0][1]);
-        printf("%s %d\n", "pipe1", 3);
     }
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
@@ -189,6 +182,7 @@ int execute(DynArray_T oTokens, char **argv)
     {
         fflush(NULL);
         pid_t childId = fork();
+
         if (childId == -1)
         {
             perror(argv[0]);
@@ -203,6 +197,14 @@ int execute(DynArray_T oTokens, char **argv)
             */
             if (commandIndex == 0)
             {
+                printf("%s %d\n", "child first case", getpid());
+                printf("%s %d\n", "pipe1", pipes[0][0]);
+                close(pipes[0][0]);
+                printf("%s %d\n", "pipe1", pipes[0][1]);
+                dup2(pipes[0][1], 1); /* stdout */
+                //printf("%s %d\n", "pipe1", 1);
+                close(pipes[0][1]);
+                //printf("%s %d\n", "pipe1", 3);
             }
             /* 마지막일 때
                 pipe를 stdin에만 붙이고
@@ -211,10 +213,11 @@ int execute(DynArray_T oTokens, char **argv)
             else if (commandIndex == commandSize - 1)
             {
                 /* stdin */
+                printf("%s %d\n", "child last case", getpid());
                 close(pipes[commandIndex - 1][1]);
                 dup2(pipes[commandIndex - 1][0], 0);
-                dup2(STDOUT_FILENO, 1);
-                close(pipes[commandIndex][0]);
+                close(pipes[commandIndex - 1][0]);
+                printf("%s %d\n", "last child", pipes[commandIndex - 1][1]);
             }
             /* 중간일 때
                 commandIndex에 맞는 pipe를 stdin과 stdout에 붙인 후
@@ -222,6 +225,7 @@ int execute(DynArray_T oTokens, char **argv)
             */
             else
             {
+                printf("%s %d\n", "child middle case", getpid());
                 /* stdin */
                 close(pipes[commandIndex - 1][1]);
                 dup2(pipes[commandIndex - 1][0], 0);
@@ -229,7 +233,7 @@ int execute(DynArray_T oTokens, char **argv)
                 close(pipes[commandIndex][0]);
                 dup2(pipes[commandIndex][1], 1);
             }
-            printf("%s %d\n", "child", commandIndex);
+            printf("%s %d\n", "child execution", getpid());
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
@@ -237,8 +241,9 @@ int execute(DynArray_T oTokens, char **argv)
         // commandIndex = 0 이라면, stdout을 원래 STDOUT_FILENO으로 돌려놓기
         if (commandIndex == 0)
         {
-            dup2(STDOUT_FILENO, 1);
+            //dup2(STDOUT_FILENO, 1);
         }
+        printf("%s %d\n", "commandIndex", commandIndex);
         commandIndex += 1;
     }
     //공통적으로 사용하지 않는 파일 디스크립터 전부 닫기
@@ -250,8 +255,11 @@ int execute(DynArray_T oTokens, char **argv)
 
     //모든 자식들 끝날 때까지 기다리기
     int status;
-    while ((wait(&status)) > 0)
-        ;
+    int child;
+    while ((child = (wait(&status))) > 0)
+    {
+        printf("child process %d, parent process %d\n", child, getpid());
+    }
 
     //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
