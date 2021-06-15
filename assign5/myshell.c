@@ -143,82 +143,6 @@ static int **pipeConstructor(int pipeNumbers)
     return pipes;
 }
 
-void recursivePipe(int commandIndex, char ***commandLines, char **command, int commandSize, int pipeNumbers, int **pipes, char **argv)
-{
-    if (commandIndex < (commandSize - 1))
-    {
-        if (pipe(pipes[commandIndex]) == -1)
-        {
-            exit(-1);
-        }
-    }
-    if (commandIndex < commandSize)
-    {
-        int status;
-        fflush(NULL);
-        pid_t childId = fork();
-        if (childId == -1)
-        {
-            perror(argv[0]);
-            exit(1);
-        }
-        else if (childId == 0)
-        {
-            printf("child: %d\n", getpid());
-
-            if (command != NULL)
-            {
-                //middle command
-                //if commandIndex < commandSize
-                // stdin -> pipes[commandIndex-1]
-                // stdout -> pipes[commandIndex]
-                if (commandIndex < (commandSize - 1))
-                {
-                    printf("%s\n", "middle command");
-
-                    close(pipes[commandIndex - 1][1]);
-                    close(pipes[commandIndex][0]);
-
-                    dup2(pipes[commandIndex][1], 1);
-                    close(pipes[commandIndex][1]);
-                    dup2(pipes[commandIndex - 1][0], 0);
-                    close(pipes[commandIndex - 1][0]);
-                }
-                //last command
-                //if commandIndex == commandSize
-                // stdin -> pipes[commandIndex-1]
-                else if (commandIndex == (commandSize - 1))
-                {
-                    printf("%s\n", "last command");
-                    // close(pipes[commandIndex - 1][1]);
-                    dup2(pipes[commandIndex - 1][0], 0);
-                    close(pipes[commandIndex - 1][0]);
-                }
-                printf("child %d %s\n", commandIndex, *command);
-                fflush(NULL);
-                execvp(command[0], command);
-                perror(argv[0]);
-                exit(EXIT_FAILURE);
-            }
-            else
-            {
-                exit(EXIT_SUCCESS);
-            }
-        }
-        printf("parent: %d\n", getpid());
-        fflush(NULL);
-        int childpid = wait(&status);
-        printf("%d\n", childpid);
-        commandIndex += 1;
-        if (commandIndex < commandSize)
-        {
-            recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
-        }
-        //commandLine에 있는 strdup한거 다 free시켜야함
-        free(command);
-    }
-}
-
 int execute(DynArray_T oTokens, char **argv)
 {
     int length = DynArray_getLength(oTokens);
@@ -236,17 +160,41 @@ int execute(DynArray_T oTokens, char **argv)
     }
 
     //pipe creation
+    // 이 때 모든 process가 모든 파이프의 파일 descriptor를 가지고 있어야한다.
     int pipeNumbers = commandSize - 1;
     int **pipes = pipeConstructor(pipeNumbers);
 
     if (pipeNumbers > 0)
     {
-        if (pipe(pipes[0]) == -1)
+        for (int i = 0; i < pipeNumbers; i++)
         {
-            exit(-1);
+            if (pipe(pipes[0]) == -1)
+            {
+                exit(-1);
+            }
         }
     }
+    //병렬적으로 프로세스 진행
+    // 최상위 shell -> 여러 개의 자식 프로세스를 실행
     int commandIndex = 0;
+    while (commandIndex < commandSize)
+    {
+        fflush(NULL);
+        pid_t childId = fork();
+        if (childId == -1)
+        {
+            perror(argv[0]);
+            exit(1);
+        }
+        // 자식 프로세스
+        else if (childId == 0)
+        {
+            //명령어 실행
+            //
+        }
+        //부모 프로세스
+        //pipe들 간의 관계 조정
+    }
     fflush(NULL);
     pid_t childId = fork();
     if (childId == -1)
@@ -254,6 +202,7 @@ int execute(DynArray_T oTokens, char **argv)
         perror(argv[0]);
         exit(1);
     }
+    //자식 프로세스
     else if (childId == 0)
     {
         if (commandLines[0] != NULL)
@@ -275,13 +224,10 @@ int execute(DynArray_T oTokens, char **argv)
             exit(1);
         }
     }
+    // 부모 프로세스
     int status;
-    wait(&status);
-    if (commandSize > 1)
-    {
-        commandIndex += 1;
-        recursivePipe(commandIndex, commandLines, commandLines[commandIndex], commandSize, pipeNumbers, pipes, argv);
-    }
+    while ((wait(&status)) > 0)
+        ;
     //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
     return TRUE;
