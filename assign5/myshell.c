@@ -205,11 +205,11 @@ int execute(DynArray_T oTokens, char **argv)
             */
             if (commandIndex == 0)
             {
-                printf("%s %d\n", "child first case", getpid());
                 if (pipeNumbers == 0)
                 {
                     dup2(savedStdout, 1);
                 }
+                printf("%s %d\n", "child first case", getpid());
             }
             /* 마지막일 때
                 pipe를 stdin에만 붙이고
@@ -261,8 +261,10 @@ int execute(DynArray_T oTokens, char **argv)
     //모든 자식들 끝날 때까지 기다리기
     int status;
     int child;
-    while ((child = (wait(&status))) > 0)
+    while (child == 0)
     {
+        child = waitpid(-1, &status, WNOHANG);
+        printf("child process result: %d\n", child);
         printf("child process %d, parent process %d\n", child, getpid());
     }
 
