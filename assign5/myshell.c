@@ -85,7 +85,7 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
 
     int index = 0;
     int prevIndex = 0;
-    enum CommandType *commandTypes;
+    enum CommandType *commandTypes = calloc(1, sizeof(enum CommandType));
     *commandTypes = PIPE;
     while (TRUE)
     {
@@ -114,6 +114,8 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
             DynArray_removeAt(oTokens, 0);
         }
     }
+    free(commandTypes);
+    commandTypes = NULL;
     DynArray_free(oTokens);
     return cTokens;
 }
@@ -174,13 +176,13 @@ int execute(DynArray_T oTokens, char **argv)
             }
         }
         //우선 첫번째 파이프는 이렇게 조정
-        printf("%s %d\n", "pipe1", pipes[0][0]);
-        close(pipes[0][0]);
-        printf("%s %d\n", "pipe1", pipes[0][1]);
-        int savedStdout = dup(STDOUT_FILENO);
-        dup2(pipes[0][1], 1); /* stdout */
-        //printf("%s %d\n", "pipe1", 1);
-        close(pipes[0][1]);
+        // printf("%s %d\n", "pipe1", pipes[0][0]);
+        // close(pipes[0][0]);
+        // printf("%s %d\n", "pipe1", pipes[0][1]);
+        // int savedStdout = dup(STDOUT_FILENO);
+        // dup2(pipes[0][1], 1); /* stdout */
+        // //printf("%s %d\n", "pipe1", 1);
+        // close(pipes[0][1]);
         //printf("%s %d\n", "pipe1", 3);
     }
     //병렬적으로 프로세스 진행
@@ -205,9 +207,14 @@ int execute(DynArray_T oTokens, char **argv)
             */
             if (commandIndex == 0)
             {
-                if (pipeNumbers == 0)
+                if (pipeNumbers != 0)
                 {
-                    dup2(savedStdout, 1);
+                    dup2(pipes[0][1], 1); /* stdout */
+                    for (int i = 0; i < pipeNumbers; i++)
+                    {
+                        close(pipes[i][1]);
+                        close(pipes[i][0]);
+                    }
                 }
                 printf("%s %d\n", "child first case", getpid());
             }
@@ -219,9 +226,12 @@ int execute(DynArray_T oTokens, char **argv)
             {
                 /* stdin */
                 printf("%s %d\n", "child last case", getpid());
-                close(pipes[commandIndex - 1][1]);
                 dup2(pipes[commandIndex - 1][0], 0);
-                close(pipes[commandIndex - 1][0]);
+                for (int i = 0; i < pipeNumbers; i++)
+                {
+                    close(pipes[i][0]);
+                    close(pipes[i][1]);
+                }
                 printf("%s %d\n", "last child", pipes[commandIndex - 1][1]);
             }
             /* 중간일 때
@@ -232,11 +242,14 @@ int execute(DynArray_T oTokens, char **argv)
             {
                 printf("%s %d\n", "child middle case", getpid());
                 /* stdin */
-                close(pipes[commandIndex - 1][1]);
                 dup2(pipes[commandIndex - 1][0], 0);
                 /* stdout */
-                close(pipes[commandIndex][0]);
                 dup2(pipes[commandIndex][1], 1);
+                for (int i = 0; i < pipeNumbers; i++)
+                {
+                    close(pipes[i][1]);
+                    close(pipes[i][0]);
+                }
             }
             printf("%s %d\n", "child execution", getpid());
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
@@ -262,13 +275,20 @@ int execute(DynArray_T oTokens, char **argv)
     int status;
     int child;
     int s = commandSize;
+
     while (s > 0)
     {
-        wait(&status);
-        s--;
+        child = wait(&status);
         printf("child process result: %d\n", child);
         printf("child process %d, parent process %d\n", child, getpid());
+        s--;
     }
+    // do
+    // {
+    //     waitpid(-1, &status, WNOHANG);
+    //     printf("child process result: %d\n", child);
+    //     printf("child process %d, parent process %d\n", child, getpid());
+    // } while (child >= 0);
     //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
     return TRUE;
