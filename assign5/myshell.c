@@ -163,7 +163,7 @@ int execute(DynArray_T oTokens, char **argv)
     // 이 때 모든 process가 모든 파이프의 파일 descriptor를 가지고 있어야한다.
     int pipeNumbers = commandSize - 1;
     int **pipes = pipeConstructor(pipeNumbers);
-
+    int savedStdout;
     if (pipeNumbers > 0)
     {
         for (int i = 0; i < pipeNumbers; i++)
@@ -177,6 +177,7 @@ int execute(DynArray_T oTokens, char **argv)
         printf("%s %d\n", "pipe1", pipes[0][0]);
         close(pipes[0][0]);
         printf("%s %d\n", "pipe1", pipes[0][1]);
+        int savedStdout = dup(STDOUT_FILENO);
         dup2(pipes[0][1], 1); /* stdout */
         //printf("%s %d\n", "pipe1", 1);
         close(pipes[0][1]);
@@ -205,6 +206,10 @@ int execute(DynArray_T oTokens, char **argv)
             if (commandIndex == 0)
             {
                 printf("%s %d\n", "child first case", getpid());
+                if (pipeNumbers == 0)
+                {
+                    dup2(savedStdout, 1);
+                }
             }
             /* 마지막일 때
                 pipe를 stdin에만 붙이고
@@ -241,9 +246,9 @@ int execute(DynArray_T oTokens, char **argv)
         // commandIndex = 0 이라면, stdout을 원래 STDOUT_FILENO으로 돌려놓기
         if (commandIndex == 0)
         {
-            dup2(STDOUT_FILENO, 1);
+            dup2(savedStdout, 1);
         }
-        // printf("%s %d\n", "commandIndex", commandIndex);
+        printf("%s %d\n", "commandIndex", commandIndex);
         commandIndex += 1;
     }
     //공통적으로 사용하지 않는 파일 디스크립터 전부 닫기
