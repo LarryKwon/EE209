@@ -261,13 +261,14 @@ int execute(DynArray_T oTokens, char **argv)
     //모든 자식들 끝날 때까지 기다리기
     int status;
     int child;
-    while (child == 0)
+    int s = commandSize;
+    while (s > 0)
     {
-        child = waitpid(-1, &status, WNOHANG);
+        wait(&status);
+        s--;
         printf("child process result: %d\n", child);
         printf("child process %d, parent process %d\n", child, getpid());
     }
-
     //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
     return TRUE;
