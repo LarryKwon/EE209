@@ -129,12 +129,12 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     {
         if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
         {
-            char *redirection = calloc(1, sizeof(char *));
+            redirection = (char *)calloc(1, sizeof(char *));
             *redirection = "STDIN";
         }
         else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
         {
-            char *redirection = calloc(1, sizeof(char *));
+            redirection = (char *)calloc(1, sizeof(char *));
             *redirection = "STDOUT";
         }
         char *value = getTokenValue(DynArray_get(Tokens, i));
@@ -143,6 +143,29 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     command[length] = redirection;
 
     return command;
+}
+char **redirectionFiles(DynArray_T Tokens, char **files)
+{
+    int length = DynArray_getLength(Tokens);
+    files = (char **)calloc(2, sizeof(char *));
+    char *stdinFile = NULL;
+    char *stdoutFile = NULL;
+    for (int i = 0; i < length; i++)
+    {
+        if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
+        {
+            stdinFile = calloc(1, sizeof(char *));
+            stdinFile = getTokenValue(DynArray_get(Tokens, i + 1));
+        }
+        else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
+        {
+            stdoutFile = calloc(1, sizeof(char *));
+            stdoutFile = getTokenValue(DynArray_get(Tokens, i + 1));
+        }
+        files[0] = stdinFile;
+        files[1] = stdoutFile;
+    }
+    return files;
 }
 
 static int **pipeConstructor(int pipeNumbers)
@@ -167,11 +190,13 @@ int execute(DynArray_T oTokens, char **argv)
 
     //commandLines: 각 Command를 가지고 있는 배열
     char ***commandLines = (char ***)calloc(commandSize, sizeof(char **));
-    int commandLength = calloc(commandSize, sizeof(int));
+    char ***fileNames = (char ***)calloc(commandSize, sizeof(char **));
+    int *commandLength = (int *)calloc(commandSize, sizeof(int));
     for (int i = 0; i < commandSize; i++)
     {
         commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
         commandLength[i] = DynArray_getLength(DynArray_get(cTokens, i));
+        fileNames[i] = redirectionFiles(DynArray_get(cTokens, i), commandLines[i]);
     }
 
     //pipe creation
@@ -258,22 +283,56 @@ int execute(DynArray_T oTokens, char **argv)
 
             int length = commandLength[commandIndex];
             char *isRedirection = commandLines[commandIndex][length];
-            if (strcmp(isRedirection, "STDIN"))
+            if (strcmp(isRedirection, "STDIN") == 0)
             {
                 //STDIN File Descriptor 조작
+                int stdinFd = open(fileNames[commandIndex][0], O_RDONLY);
+                if (stdinFd == -1)
+                {
+                    perror(argv[0]);
+                    _exit(EXIT_FAILURE);
+                }
+                int stdinRet = dup2(stdinFd, 0); /* stdin */
+                if (stdinRet == -1)
+                {
+                    perror(fileNames[commandIndex][0]);
+                    _exit(EXIT_FAILURE);
+                }
+                stdinRet = close(stdinFd);
+                if (stdinRet == -1)
+                {
+                    perror(fileNames[commandIndex][0]);
+                    _exit(EXIT_FAILURE);
+                }
+
                 free(isRedirection);
                 commandLines[commandIndex][length] = NULL;
             }
-            else if (strcmp(isRedirection, "STDOUT"))
+            else if (strcmp(isRedirection, "STDOUT") == 0)
             {
                 //STDOUT File Descriptor 조작
+
+                int stdoutFd = creat(fileNames[commandIndex][1], 0600);
+                if (stdoutFd == -1)
+                {
+                    perror(argv[0]);
+                    _exit(EXIT_FAILURE);
+                }
+                int stdoutRet = dup2(stdoutFd, 0); /* stdin */
+                if (stdoutRet == -1)
+                {
+                    perror(fileNames[commandIndex][0]);
+                    _exit(EXIT_FAILURE);
+                }
+                stdoutRet = close(stdoutFd);
+                if (stdoutRet == -1)
+                {
+                    perror(fileNames[commandIndex][0]);
+                    _exit(EXIT_FAILURE);
+                }
                 free(isRedirection);
                 commandLines[commandIndex][length] = NULL;
             }
-            else
-            {
-            }
-
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
