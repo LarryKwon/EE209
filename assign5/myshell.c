@@ -129,19 +129,23 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     {
         if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
         {
-            redirection = (char *)calloc(1, sizeof(char *));
             redirection = "STDIN";
         }
         else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
         {
-            redirection = (char *)calloc(1, sizeof(char *));
             redirection = "STDOUT";
         }
-        char *value = getTokenValue(DynArray_get(Tokens, i));
-        command[i] = strdup(value);
+        command[i] = getTokenValue(DynArray_get(Tokens, i));
     }
-    command[length] = redirection;
-
+    if (redirection != NULL)
+    {
+        command[length] = strdup(redirection);
+    }
+    else
+    {
+        command[length] = NULL;
+    }
+    printf("%p\n", command[length]);
     return command;
 }
 char **redirectionFiles(DynArray_T Tokens, char **files)
@@ -197,6 +201,7 @@ int execute(DynArray_T oTokens, char **argv)
         commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
         commandLength[i] = DynArray_getLength(DynArray_get(cTokens, i));
         fileNames[i] = redirectionFiles(DynArray_get(cTokens, i), commandLines[i]);
+        printf("%s %s\n", fileNames[i][0], fileNames[i][1]);
     }
 
     //pipe creation
@@ -216,6 +221,8 @@ int execute(DynArray_T oTokens, char **argv)
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
     int commandIndex = 0;
+    char *isRedirection = commandLines[commandIndex][length];
+    printf("%p\n", isRedirection);
     while (commandIndex < commandSize)
     {
         fflush(NULL);
@@ -283,6 +290,7 @@ int execute(DynArray_T oTokens, char **argv)
 
             int length = commandLength[commandIndex];
             char *isRedirection = commandLines[commandIndex][length];
+            printf("%s\n", isRedirection);
             /*
             if (strcmp(isRedirection, "STDIN") == 0)
             {
