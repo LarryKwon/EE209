@@ -124,12 +124,23 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
 {
     int length = DynArray_getLength(Tokens);
     command = calloc(length + 1, sizeof(char *));
+    char *redirection = NULL;
     for (int i = 0; i < length; i++)
     {
+        if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
+        {
+            char *redirection = calloc(1, sizeof(char *));
+            *redirection = "STDIN";
+        }
+        else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
+        {
+            char *redirection = calloc(1, sizeof(char *));
+            *redirection = "STDOUT";
+        }
         char *value = getTokenValue(DynArray_get(Tokens, i));
         command[i] = strdup(value);
     }
-    command[length] = NULL;
+    command[length] = redirection;
 
     return command;
 }
@@ -156,16 +167,17 @@ int execute(DynArray_T oTokens, char **argv)
 
     //commandLines: 각 Command를 가지고 있는 배열
     char ***commandLines = (char ***)calloc(commandSize, sizeof(char **));
+    int commandLength = calloc(commandSize, sizeof(int));
     for (int i = 0; i < commandSize; i++)
     {
         commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
+        commandLength[i] = DynArray_getLength(DynArray_get(cTokens, i));
     }
 
     //pipe creation
     // 이 때 모든 process가 모든 파이프의 파일 descriptor를 가지고 있어야한다.
     int pipeNumbers = commandSize - 1;
     int **pipes = pipeConstructor(pipeNumbers);
-    int savedStdout;
     if (pipeNumbers > 0)
     {
         for (int i = 0; i < pipeNumbers; i++)
@@ -175,15 +187,6 @@ int execute(DynArray_T oTokens, char **argv)
                 exit(-1);
             }
         }
-        //우선 첫번째 파이프는 이렇게 조정
-        // printf("%s %d\n", "pipe1", pipes[0][0]);
-        // close(pipes[0][0]);
-        // printf("%s %d\n", "pipe1", pipes[0][1]);
-        // int savedStdout = dup(STDOUT_FILENO);
-        // dup2(pipes[0][1], 1); /* stdout */
-        // //printf("%s %d\n", "pipe1", 1);
-        // close(pipes[0][1]);
-        //printf("%s %d\n", "pipe1", 3);
     }
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
@@ -252,14 +255,28 @@ int execute(DynArray_T oTokens, char **argv)
                 }
             }
             printf("%s %d\n", "child execution", getpid());
+
+            int length = commandLength[commandIndex];
+            char *isRedirection = commandLines[commandIndex][length];
+            if (strcmp(isRedirection, "STDIN"))
+            {
+                //STDIN File Descriptor 조작
+                free(isRedirection);
+                commandLines[commandIndex][length] = NULL;
+            }
+            else if (strcmp(isRedirection, "STDOUT"))
+            {
+                //STDOUT File Descriptor 조작
+                free(isRedirection);
+                commandLines[commandIndex][length] = NULL;
+            }
+            else
+            {
+            }
+
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
-        }
-        // commandIndex = 0 이라면, stdout을 원래 STDOUT_FILENO으로 돌려놓기
-        if (commandIndex == 0)
-        {
-            dup2(savedStdout, 1);
         }
         printf("%s %d\n", "commandIndex", commandIndex);
         commandIndex += 1;
