@@ -283,6 +283,7 @@ int execute(DynArray_T oTokens, char **argv)
 
             int length = commandLength[commandIndex];
             char *isRedirection = commandLines[commandIndex][length];
+            /*
             if (strcmp(isRedirection, "STDIN") == 0)
             {
                 //STDIN File Descriptor 조작
@@ -292,7 +293,7 @@ int execute(DynArray_T oTokens, char **argv)
                     perror(argv[0]);
                     _exit(EXIT_FAILURE);
                 }
-                int stdinRet = dup2(stdinFd, 0); /* stdin */
+                int stdinRet = dup2(stdinFd, 0); /* stdin 
                 if (stdinRet == -1)
                 {
                     perror(fileNames[commandIndex][0]);
@@ -318,7 +319,7 @@ int execute(DynArray_T oTokens, char **argv)
                     perror(argv[0]);
                     _exit(EXIT_FAILURE);
                 }
-                int stdoutRet = dup2(stdoutFd, 0); /* stdin */
+                int stdoutRet = dup2(stdoutFd, 0); /* stdin 
                 if (stdoutRet == -1)
                 {
                     perror(fileNames[commandIndex][0]);
@@ -333,6 +334,7 @@ int execute(DynArray_T oTokens, char **argv)
                 free(isRedirection);
                 commandLines[commandIndex][length] = NULL;
             }
+            */
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
