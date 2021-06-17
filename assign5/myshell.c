@@ -130,12 +130,12 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
         if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
         {
             redirection = (char *)calloc(1, sizeof(char *));
-            *redirection = "STDIN";
+            redirection = "STDIN";
         }
         else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
         {
             redirection = (char *)calloc(1, sizeof(char *));
-            *redirection = "STDOUT";
+            redirection = "STDOUT";
         }
         char *value = getTokenValue(DynArray_get(Tokens, i));
         command[i] = strdup(value);
