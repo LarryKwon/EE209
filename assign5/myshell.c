@@ -294,6 +294,8 @@ int execute(DynArray_T oTokens, char **argv)
 
             int length = commandLength[commandIndex];
             char *isRedirection = commandLines[commandIndex][length];
+            // printf("%s\n", "printf error");
+            // printf("%s\n", isRedirection);
             /*
             if (strcmp(isRedirection, "STDIN") == 0)
             {
