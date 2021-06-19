@@ -125,20 +125,26 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     int length = DynArray_getLength(Tokens);
     command = calloc(length + 1, sizeof(char *));
     char *redirection = NULL;
+    enum CommandType commandType;
     for (int i = 0; i < length; i++)
     {
-        if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
+        commandType = getCommandType(DynArray_get(Tokens, i));
+        if (commandType == STDIN)
         {
             // redirection = (char *)calloc(1, sizeof(char *));
             redirection = "STDIN";
         }
-        else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
+        else if (commandType == STDOUT)
         {
             // redirection = (char *)calloc(1, sizeof(char *));
             redirection = "STDOUT";
         }
-        char *value = getTokenValue(DynArray_get(Tokens, i));
-        command[i] = strdup(value);
+        else if (commandType == COMMAND || commandType == ARGUMENT)
+        {
+            char *value = getTokenValue(DynArray_get(Tokens, i));
+            command[i] = strdup(value);
+            free(value);
+        }
     }
     if (redirection == NULL)
     {

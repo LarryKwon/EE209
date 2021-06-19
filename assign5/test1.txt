@@ -1,0 +1,17 @@
+enum TokenType
+/* A Token is either a number or a word, expressed as a string. */
+typedef struct Token *Token_T;
+/* Create and return a Token whose type is eTokenType and whose
+   memory is available.  The caller owns the Token. */
+Token_T makeToken(enum TokenType eTokenType, char *pcValue);
+/* get TokenType in the Token */
+enum TokenType getTokenType(Token_T token);
+/* get TokenValue in the Token */
+char *getTokenValue(Token_T token);
+void setCommandType(Token_T token, enum CommandType commandType);
+enum CommandType getCommandType(Token_T token);
+void printWordToken(void *pvItem, void *pvExtra);
+void printStringToken(void *pvItem, void *pvExtra);
+void printAnyTokenWithTokenType(void *pvItem, void *pvExtra);
+void printAnyTokenWithCommandType(void *pvItem, void *pvExtra);
+void freeToken(void *pvItem, void *pvExtra);
