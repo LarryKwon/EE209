@@ -137,7 +137,8 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
             // redirection = (char *)calloc(1, sizeof(char *));
             redirection = "STDOUT";
         }
-        command[i] = getTokenValue(DynArray_get(Tokens, i));
+        char *value = getTokenValue(DynArray_get(Tokens, i));
+        command[i] = strdup(value);
     }
     if (redirection == NULL)
     {
@@ -226,8 +227,6 @@ int execute(DynArray_T oTokens, char **argv)
     //병렬적으로 프로세스 진행
     // 최상위 shell -> 여러 개의 자식 프로세스를 실행
     int commandIndex = 0;
-    char *isRedirection = commandLines[commandIndex][length];
-    printf("%p\n", isRedirection);
     while (commandIndex < commandSize)
     {
         fflush(NULL);
@@ -295,7 +294,6 @@ int execute(DynArray_T oTokens, char **argv)
 
             int length = commandLength[commandIndex];
             char *isRedirection = commandLines[commandIndex][length];
-            printf("%s\n", isRedirection);
             /*
             if (strcmp(isRedirection, "STDIN") == 0)
             {
