@@ -26,6 +26,24 @@ enum
     MAX_LINE_SIZE = 1024
 };
 
+static void sigQuitHandler(int iSig)
+{
+    _exit(0);
+}
+static void parentSigQuitHAndler(int iSig)
+{
+    assert(signal(SIGQUIT, childSigQuitHandler) != SIG_ERR);
+    char *messageout =
+        "\nType Ctrl-\\ again within 5 seconds to exit.\n% ";
+    write(STDOUT_FILENO, messageout, strlen(messageout));
+    alarm(5);
+}
+
+static void sigAlarmHandler(int iSignal)
+{
+    assert(signal(SIGQUIT, sigQuitHandler) != SIG_ERR);
+    assert(signal(SIGALRM, sigAlarmHandler) != SIG_ERR);
+}
 static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
 {
     int lexical;
