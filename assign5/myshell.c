@@ -126,23 +126,45 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     command = calloc(length + 1, sizeof(char *));
     char *redirection = NULL;
     enum CommandType commandType;
+    int commandIndex = 0;
     for (int i = 0; i < length; i++)
     {
         commandType = getCommandType(DynArray_get(Tokens, i));
         if (commandType == STDIN)
         {
             // redirection = (char *)calloc(1, sizeof(char *));
-            redirection = "STDIN";
+            if (redirection == NULL)
+            {
+                redirection = calloc(13, sizeof(char));
+                strcpy(redirection, "STDIN");
+                printf("%s\n", redirection);
+            }
+            else
+            {
+                strcat(redirection, "STDIN");
+                printf("%s\n", redirection);
+            }
         }
         else if (commandType == STDOUT)
         {
             // redirection = (char *)calloc(1, sizeof(char *));
-            redirection = "STDOUT";
+            if (redirection == NULL)
+            {
+                redirection = calloc(13, sizeof(char));
+                strcpy(redirection, "STDOUT");
+                printf("%s\n", redirection);
+            }
+            else
+            {
+                strcat(redirection, "STDOUT");
+                printf("%s\n", redirection);
+            }
         }
         else if (commandType == COMMAND || commandType == ARGUMENT)
         {
             char *value = getTokenValue(DynArray_get(Tokens, i));
-            command[i] = strdup(value);
+            command[commandIndex] = strdup(value);
+            commandIndex += 1;
             free(value);
         }
     }
@@ -153,6 +175,7 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     else
     {
         command[length] = strdup(redirection);
+        free(redirection);
     }
 
     return command;
@@ -305,33 +328,7 @@ int execute(DynArray_T oTokens, char **argv)
 
             if (isRedirection != NULL)
             {
-                if (strcmp(isRedirection, "STDOUT") == 0)
-                {
-                    //STDOUT File Descriptor 조작
-                    printf("stdout filename: %s\n", fileNames[commandIndex][1]);
-                    int stdoutFd = creat(fileNames[commandIndex][1], 0600);
-                    if (stdoutFd == -1)
-                    {
-                        perror(argv[0]);
-                        _exit(EXIT_FAILURE);
-                    }
-                    int stdoutRet = dup2(stdoutFd, 1); // stdout
-                    if (stdoutRet == -1)
-                    {
-                        perror(fileNames[commandIndex][0]);
-                        _exit(EXIT_FAILURE);
-                    }
-                    stdoutRet = close(stdoutFd);
-                    if (stdoutRet == -1)
-                    {
-                        perror(fileNames[commandIndex][0]);
-                        _exit(EXIT_FAILURE);
-                    }
-                    free(isRedirection);
-                    commandLines[commandIndex][length] = NULL;
-                }
-
-                else if (strcmp(isRedirection, "STDIN") == 0)
+                if (strstr(isRedirection, "STDIN") != NULL)
                 {
                     //STDIN File Descriptor 조작
                     printf("stdin filename: %s\n", fileNames[commandIndex][0]);
@@ -354,9 +351,37 @@ int execute(DynArray_T oTokens, char **argv)
                         _exit(EXIT_FAILURE);
                     }
 
-                    free(isRedirection);
+                    // free(isRedirection);
                     commandLines[commandIndex][length] = NULL;
                 }
+
+                if (strstr(isRedirection, "STDOUT") != NULL)
+                {
+                    //STDOUT File Descriptor 조작
+                    printf("stdout filename: %s\n", fileNames[commandIndex][1]);
+                    int stdoutFd = creat(fileNames[commandIndex][1], 0600);
+                    if (stdoutFd == -1)
+                    {
+                        perror(argv[0]);
+                        _exit(EXIT_FAILURE);
+                    }
+                    int stdoutRet = dup2(stdoutFd, 1); // stdout
+                    if (stdoutRet == -1)
+                    {
+                        perror(fileNames[commandIndex][0]);
+                        _exit(EXIT_FAILURE);
+                    }
+                    stdoutRet = close(stdoutFd);
+                    if (stdoutRet == -1)
+                    {
+                        perror(fileNames[commandIndex][0]);
+                        _exit(EXIT_FAILURE);
+                    }
+                    // free(isRedirection);
+                    commandLines[commandIndex][length] = NULL;
+                }
+
+                free(isRedirection);
             }
 
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
