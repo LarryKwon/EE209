@@ -423,6 +423,7 @@ int main(int argc, char *argv[])
     printf("%% ");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
+        printf("%s\n", acLine);
         execute(acLine, argv);
         printf("%% ");
     }

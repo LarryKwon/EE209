@@ -7,6 +7,7 @@
 #include "dynarray.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 enum
 {
 	MIN_PHYS_LENGTH = 2

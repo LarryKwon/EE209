@@ -32,7 +32,7 @@ static void sigQuitHandler(int iSig)
 }
 static void parentSigQuitHAndler(int iSig)
 {
-    assert(signal(SIGQUIT, childSigQuitHandler) != SIG_ERR);
+    assert(signal(SIGQUIT, sigQuitHandler) != SIG_ERR);
     char *messageout =
         "\nType Ctrl-\\ again within 5 seconds to exit.\n% ";
     write(STDOUT_FILENO, messageout, strlen(messageout));
@@ -60,8 +60,9 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     lexical = lexLine(acLine, oTokens);
     if (lexical)
     {
-        //DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
-        //printf("%s\n", "-----------------------");
+        DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
+        printAnyTokenWithTokenType(DynArray_get(oTokens, 0), NULL);
+        printf("%s\n", "-----------------------");
         syntatic = syntaticLine(oTokens);
     }
     else
@@ -70,8 +71,8 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     }
     if (syntatic)
     {
-        //printf("%s\n", "valid");
-        //DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        printf("%s\n", "valid");
+        DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
     }
     else
     {
@@ -438,39 +439,9 @@ int execute(DynArray_T oTokens, char **argv)
         printf("child process %d, parent process %d\n", child, getpid());
         s--;
     }
-    // do
-    // {
-    //     waitpid(-1, &status, WNOHANG);
-    //     printf("child process result: %d\n", child);
-    //     printf("child process %d, parent process %d\n", child, getpid());
-    // } while (child >= 0);
-    //commandLine에 있는 strdup한거 다 free시켜야함
     free(commandLines[0]);
     return TRUE;
 }
-
-// fflush(NULL);
-// pid_t childId = fork();
-// if (childId == -1)
-// {
-//     perror(argv[0]);
-//     return EXIT_FAILURE;
-// }
-// if (childId == 0)
-// {
-//     if (commands != NULL)
-//     {
-//         execvp(commands[0], commands);
-//         perror(argv[0]);
-//         exit(EXIT_FAILURE);
-//     }
-// }
-// else
-// {
-//     childId = wait(&status);
-//     free(commands);
-//     return TRUE;
-// }
 
 int main(int argc, char *argv[])
 {
@@ -503,8 +474,8 @@ int main(int argc, char *argv[])
     printf("%% ");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
+        printf("%s\n", acLine);
         DynArray_T oTokens;
-
         oTokens = executionInit(oTokens, acLine);
 
         if (oTokens == NULL)
@@ -512,8 +483,10 @@ int main(int argc, char *argv[])
         }
         else
         {
+            printf("%s\n", "----- builtin before----");
             enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
-
+            printf("%s\n", "----- after builtin after----");
+            fflush(NULL);
             if (builtInCommand != NOTHING)
             {
                 BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
