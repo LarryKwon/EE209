@@ -30,7 +30,7 @@ static void sigQuitHandler(int iSig)
 {
     _exit(0);
 }
-static void parentSigQuitHAndler(int iSig)
+static void parentSigQuitHandler(int iSig)
 {
     assert(signal(SIGQUIT, sigQuitHandler) != SIG_ERR);
     char *messageout =
@@ -41,7 +41,7 @@ static void parentSigQuitHAndler(int iSig)
 
 static void sigAlarmHandler(int iSignal)
 {
-    assert(signal(SIGQUIT, sigQuitHandler) != SIG_ERR);
+    assert(signal(SIGQUIT, parentSigQuitHandler) != SIG_ERR);
     assert(signal(SIGALRM, sigAlarmHandler) != SIG_ERR);
 }
 static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
@@ -60,9 +60,9 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     lexical = lexLine(acLine, oTokens);
     if (lexical)
     {
-        DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
-        printAnyTokenWithTokenType(DynArray_get(oTokens, 0), NULL);
-        printf("%s\n", "-----------------------");
+        // //DynArray_map(oTokens, printAnyTokenWithTokenType, NULL);
+        // printAnyTokenWithTokenType(DynArray_get(oTokens, 0), NULL);
+        // printf("%s\n", "-----------------------");
         syntatic = syntaticLine(oTokens);
     }
     else
@@ -71,8 +71,8 @@ static DynArray_T executionInit(DynArray_T oTokens, char *acLine)
     }
     if (syntatic)
     {
-        printf("%s\n", "valid");
-        DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
+        // printf("%s\n", "valid");
+        // DynArray_map(oTokens, printAnyTokenWithCommandType, NULL);
     }
     else
     {
@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (signal(SIGQUIT, parentSigQuitHAndler) == SIG_ERR)
+    if (signal(SIGQUIT, parentSigQuitHandler) == SIG_ERR)
     {
         perror(argv[0]);
         exit(EXIT_FAILURE);
@@ -474,19 +474,21 @@ int main(int argc, char *argv[])
     printf("%% ");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
-        printf("%s\n", acLine);
+        //printf("%d\n", acLine);
         DynArray_T oTokens;
         oTokens = executionInit(oTokens, acLine);
 
         if (oTokens == NULL)
         {
         }
+        else if (DynArray_getLength(oTokens) == 0)
+        {
+            printf("%% ");
+            continue;
+        }
         else
         {
-            printf("%s\n", "----- builtin before----");
             enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
-            printf("%s\n", "----- after builtin after----");
-            fflush(NULL);
             if (builtInCommand != NOTHING)
             {
                 BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);

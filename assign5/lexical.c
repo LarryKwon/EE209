@@ -84,20 +84,16 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
       switch (eState)
       {
       case STATE_START:
-         printf("%d: %c\n", 1, c);
-         printf("%d\n", isspace(c));
          if (isspace(c))
          {
             if ((c == '\n') || (c == '\0'))
             {
                return TRUE;
             }
-            printf("%d: %c\n", 3, c);
             eState = STATE_START;
          }
          else
          {
-            printf("%d: %c\n", 4, c);
             if (c == '\"')
             {
                eState = STATE_IN_STR;
@@ -112,8 +108,6 @@ int lexLine(const char *pcLine, DynArray_T oTokens)
             else
             {
                acValue[iValueIndex++] = c;
-               printf("%d: %c\n", 2, c);
-               fflush(stdout);
                eState = STATE_IN_WORD;
             }
          }
