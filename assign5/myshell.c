@@ -129,18 +129,25 @@ char **commandsConstructor(DynArray_T Tokens, char **command)
     {
         if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
         {
-            redirection = (char *)calloc(1, sizeof(char *));
-            *redirection = "STDIN";
+            // redirection = (char *)calloc(1, sizeof(char *));
+            redirection = "STDIN";
         }
         else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
         {
-            redirection = (char *)calloc(1, sizeof(char *));
-            *redirection = "STDOUT";
+            // redirection = (char *)calloc(1, sizeof(char *));
+            redirection = "STDOUT";
         }
         char *value = getTokenValue(DynArray_get(Tokens, i));
         command[i] = strdup(value);
     }
-    command[length] = redirection;
+    if (redirection == NULL)
+    {
+        command[length] = redirection;
+    }
+    else
+    {
+        command[length] = strdup(redirection);
+    }
 
     return command;
 }
@@ -154,17 +161,19 @@ char **redirectionFiles(DynArray_T Tokens, char **files)
     {
         if (getCommandType(DynArray_get(Tokens, i)) == STDIN)
         {
-            stdinFile = calloc(1, sizeof(char *));
+            //stdinFile = calloc(1, sizeof(char *));
             stdinFile = getTokenValue(DynArray_get(Tokens, i + 1));
         }
         else if (getCommandType(DynArray_get(Tokens, i)) == STDOUT)
         {
-            stdoutFile = calloc(1, sizeof(char *));
+            //stdoutFile = calloc(1, sizeof(char *));
             stdoutFile = getTokenValue(DynArray_get(Tokens, i + 1));
         }
         files[0] = stdinFile;
         files[1] = stdoutFile;
     }
+    // printf("%s\n", '\0');
+    // printf("%s\n", files[1]);
     return files;
 }
 
@@ -197,6 +206,8 @@ int execute(DynArray_T oTokens, char **argv)
         commandLines[i] = commandsConstructor(DynArray_get(cTokens, i), commandLines[i]);
         commandLength[i] = DynArray_getLength(DynArray_get(cTokens, i));
         fileNames[i] = redirectionFiles(DynArray_get(cTokens, i), commandLines[i]);
+        //printf("%s\n", fileNames[i][1]);
+        //printf("%s\n", fileNames[i][0]);
     }
 
     //pipe creation
