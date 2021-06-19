@@ -402,6 +402,16 @@ int execute(DynArray_T oTokens, char **argv)
                 free(isRedirection);
             }
 
+            if (signal(SIGINT, SIG_DFL) == SIG_ERR)
+            {
+                perror(argv[0]);
+                exit(EXIT_FAILURE);
+            }
+            if (signal(SIGQUIT, SIG_DFL) == SIG_ERR)
+            {
+                perror(argv[0]);
+                exit(EXIT_FAILURE);
+            }
             execvp(commandLines[commandIndex][0], commandLines[commandIndex]);
             perror(argv[0]);
             exit(1);
@@ -464,6 +474,31 @@ int execute(DynArray_T oTokens, char **argv)
 
 int main(int argc, char *argv[])
 {
+    sigset_t sSet;
+    sigemptyset(&sSet);
+    sigaddset(&sSet, SIGINT);
+    sigaddset(&sSet, SIGQUIT);
+    sigaddset(&sSet, SIGALRM);
+    assert(sigprocmask(SIG_UNBLOCK, &sSet, NULL) == 0);
+
+    if (signal(SIGINT, SIG_IGN) == SIG_ERR)
+    {
+        perror(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (signal(SIGQUIT, parentSigQuitHAndler) == SIG_ERR)
+    {
+        perror(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (signal(SIGALRM, sigAlarmHandler) == SIG_ERR)
+    {
+        perror(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     char acLine[MAX_LINE_SIZE];
     printf("%% ");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
