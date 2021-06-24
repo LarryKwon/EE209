@@ -538,8 +538,6 @@ int main(int argc, char *argv[])
                     execute(oTokens, argv);
                 }
             }
-            DynArray_map(oTokens, freeToken, NULL);
-            DynArray_free(oTokens);
         }
         fclose(ishrc);
     }
