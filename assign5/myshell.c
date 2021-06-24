@@ -121,7 +121,7 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
         {
             DynArray_add(command, DynArray_removeAt(oTokens, 0));
         }
-        DynArray_map(command, printAnyTokenWithCommandType, NULL);
+        //DynArray_map(command, printAnyTokenWithCommandType, NULL);
         DynArray_add(cTokens, command);
         // prevIndex = index + 1;
         if (DynArray_getLength(oTokens) == 0)
@@ -130,11 +130,12 @@ DynArray_T commandsSpliter(DynArray_T oTokens, DynArray_T cTokens)
         }
         else
         {
-            DynArray_removeAt(oTokens, 0);
+            free(DynArray_removeAt(oTokens, 0));
         }
     }
     free(commandTypes);
     commandTypes = NULL;
+    DynArray_map(oTokens, freeToken, NULL);
     DynArray_free(oTokens);
     return cTokens;
 }
@@ -220,8 +221,6 @@ char **redirectionFiles(DynArray_T Tokens, char **files)
         files[0] = stdinFile;
         files[1] = stdoutFile;
     }
-    // printf("%s\n", '\0');
-    // printf("%s\n", files[1]);
     return files;
 }
 
@@ -439,7 +438,39 @@ int execute(DynArray_T oTokens, char **argv)
         printf("child process %d, parent process %d\n", child, getpid());
         s--;
     }
-    free(commandLines[0]);
+
+    //메모리 해제하기
+    for (int i = 0; i < commandSize; i++)
+    {
+        int j = 0;
+        while (commandLines[i][j] != NULL)
+        {
+            free(commandLines[i][j]);
+            commandLines[i][j] = NULL;
+        }
+        if (commandLines[i] != NULL)
+        {
+            free(commandLines[i]);
+            commandLines[i] = NULL;
+        }
+        if (fileNames[i] != NULL)
+        {
+            if (fileNames[i][0] != NULL)
+            {
+                free(fileNames[i][0]);
+                fileNames[i][0] = NULL;
+            }
+            if (fileNames[i][1] != NULL)
+            {
+                free(fileNames[i][1]);
+                fileNames[i][0] = NULL;
+            }
+            free(fileNames[i]);
+            fileNames[i] = NULL;
+        }
+    }
+    free(commandLength);
+    free(commandLines);
     return TRUE;
 }
 
@@ -471,6 +502,50 @@ int main(int argc, char *argv[])
     }
 
     char acLine[MAX_LINE_SIZE];
+
+    FILE *ishrc = NULL;
+    char *homedirectory; //path name of .ishrc
+    homedirectory = (char *)calloc(1, strlen(getenv("HOME")) + strlen("/.ishrc") + 1);
+    strcat(strcpy(homedirectory, getenv("HOME")), "/.ishrc");
+    ishrc = fopen(homedirectory, "r");
+    if (ishrc)
+    {
+        while (fgets(acLine, MAX_LINE_SIZE, ishrc) != NULL)
+        {
+            printf("%% %s", acLine);
+            DynArray_T oTokens;
+            oTokens = executionInit(oTokens, acLine);
+            if (oTokens == NULL)
+            {
+            }
+            else if (DynArray_getLength(oTokens) == 0)
+            {
+                continue;
+            }
+            else
+            {
+                enum BuiltInCommand builtInCommand = isBuiltIn(oTokens);
+                if (builtInCommand != NOTHING)
+                {
+                    BuiltIn_T builtInFunction = BuiltInContext(builtInCommand);
+                    int builtInResult = (*builtInFunction)(oTokens);
+                    if (builtInResult == FALSE)
+                    {
+                    }
+                }
+                else
+                {
+                    execute(oTokens, argv);
+                }
+            }
+            DynArray_map(oTokens, freeToken, NULL);
+            DynArray_free(oTokens);
+        }
+        fclose(ishrc);
+    }
+    free(homedirectory);
+    fflush(NULL);
+
     printf("%% ");
     while (fgets(acLine, MAX_LINE_SIZE, stdin) != NULL)
     {
@@ -503,8 +578,5 @@ int main(int argc, char *argv[])
             }
         }
         printf("%% ");
-
-        //DynArray_map(oTokens, freeToken, NULL);
-        //DynArray_free(oTokens);
     }
 }
