@@ -6,10 +6,11 @@
 ## Partner  
 - Worked individually (eligible for Extra Credit 2)
 
+### Score
+- 110 out of 100 (With Extra credit)
+
 ---
-
 ## Description
-
 This project is a minimal but functional Unix shell called `ish`, developed for KAIST EE209: Programming Structures for EE. It supports interactive command parsing and execution, including:
 
 - Lexical analysis of user input
